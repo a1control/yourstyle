@@ -581,6 +581,11 @@ input[type="range"]::-webkit-slider-thumb {
     <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="2800"></div>
     <div class="field"><label>Max moves per stroke</label><input type="number" id="maxSeg" value="8"></div>
   </div>
+  <div class="field-row">
+    <div class="field"><label>Chain mode (fast, no Shizuku)</label><input type="checkbox" id="contMode" checked style="width:24px;height:24px"></div>
+    <div class="field"><label>Points per stroke</label><input type="number" id="maxPts" value="30"></div>
+  </div>
+  <div class="field"><label>Time per point ms</label><input type="number" id="msPt" value="250"></div>
   <div class="ptabs" id="platTabs"></div>
   <div class="combo-status" id="comboStatus"><span class="step" id="comboStep"></span> on <span id="comboName"></span></div>
   <div class="canvas-wrap" id="canvasWrap">
@@ -862,8 +867,8 @@ function rdp(p,e){if(p.length<3)return p;let m=0,k=0;const a=p[0],b=p[p.length-1
   for(let i=1;i<p.length-1;i++){const d=dist(p[i],a,b);if(d>m){m=d;k=i}}
   return m>e?rdp(p.slice(0,k+1),e).slice(0,-1).concat(rdp(p.slice(k),e)):[a,b]}
 function simp(s){const W=SW(),H=SH(),M=Math.max(1,num('maxSeg',8));
-  const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=4,r=rdp(p,e);
-  while(r.length-1>M&&e<3000){e*=1.4;r=rdp(p,e)}
+  const M2=$('contMode').checked?Math.max(2,num('maxPts',30))-1:M;const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=4,r=rdp(p,e);
+  while(r.length-1>M2&&e<3000){e*=1.4;r=rdp(p,e)}
   return r.map(q=>({x:Math.max(1,Math.round(q.x)),y:Math.max(1,Math.round(q.y))}))}
 
 // One webhook query per move. Short strokes become taps.
@@ -871,6 +876,8 @@ function steps(i){const out=[];
   P[i].s.forEach(s=>{const p=simp(s);let len=0;
     for(let k=1;k<p.length;k++)len+=Math.hypot(p[k].x-p[k-1].x,p[k].y-p[k-1].y);
     if(len<20){out.push(`?X=${p[0].x}&Y=${p[0].y}`);return}
+    if($('contMode').checked){const u=p.filter((q,j)=>!j||q.x!=p[j-1].x||q.y!=p[j-1].y);
+      for(let c=0;c<u.length-1;c+=15)out.push('?'+u.slice(c,c+16).map((q,j)=>`PX${j}=${q.x}&PY${j}=${q.y}`).join('&'));return}
     for(let k=1;k<p.length;k++){const a=p[k-1],b=p[k];
       if(a.x!=b.x||a.y!=b.y)out.push(`?SX=${a.x}&SY=${a.y}&EX=${b.x}&EY=${b.y}`)}});
   return out}
@@ -895,8 +902,9 @@ function tabs(){const t=$('platTabs');t.innerHTML='';
     d.onclick=()=>{if(comboRunning)return;cur=i;refresh()};t.appendChild(d)});
   const a=document.createElement('div');a.className='ptab';a.textContent='+ Add platform';
   a.onclick=()=>{if(comboRunning)return;P.push({s:[],w:2000});cur=P.length-1;refresh()};t.appendChild(a)}
+const ptT=q=>q.startsWith('?PX0=')?(q.split('&').length/2-1)*num('msPt',250):0;
 function info(){let m=0,t=0;const g=Math.max(2100,num('gapMs',2800));
-  P.forEach((p,i)=>{const n=steps(i).length;m+=n;t+=n*g+(n?p.w:0)});
+  P.forEach((p,i)=>{const st=steps(i);m+=st.length;t+=st.reduce((a,q)=>a+g+ptT(q),0)+(st.length?p.w:0)});
   $('seqInfo').textContent=`${m} moves in total, about ${Math.round(t/1000)} seconds`}
 function refresh(){$('platWait').value=P[cur].w;tabs();draw();info();save()}
 
@@ -912,7 +920,8 @@ $('clearBtn').onclick=()=>{P[cur].s=[];refresh()};
 $('delBtn').onclick=()=>{if(P.length>1){P.splice(cur,1);cur=Math.min(cur,P.length-1)}else P[0].s=[];refresh()};
 $('platWait').oninput=e=>{P[cur].w=Math.max(0,+e.target.value||0);info();save()};
 ['scrW','scrH'].forEach(k=>$(k).oninput=()=>{fit();info();save()});
-['gapMs','maxSeg'].forEach(k=>$(k).oninput=()=>{draw();info();save()});
+['gapMs','maxSeg','maxPts','msPt'].forEach(k=>$(k).oninput=()=>{draw();info();save()});
+$('contMode').onchange=()=>{draw();info()};
 $('stopBtn').onclick=()=>{stopReq=true};
 $('runOneBtn').onclick=()=>exec([cur]);
 $('runAllBtn').onclick=()=>exec(P.map((_,i)=>i));
@@ -931,7 +940,7 @@ async function exec(ids){
       if(stopReq)break;n++;
       $('comboStep').textContent=`Move ${n}/${total}`;$('comboName').textContent=`platform ${it.i+1}`;
       $('worker').src=WEBHOOK+q+'&ts='+Date.now();
-      await sleep(gap)}
+      await sleep(gap+ptT(q))}
     if(stopReq)break;
     if(it.q.length)await sleep(P[it.i].w)}
   comboRunning=false;st.classList.remove('active');
