@@ -1,398 +1,708 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Macrodroid Integration</title>
-  <style>
-body{
-  background: radial-gradient(#eac4ff,#9e57c5);
-}
-.box{
-  border: 1px solid white;
-  border-radius: 10px;
-  padding: 10px;
-  display: block;
-  text-align: center;
-  width: 400px;
-  margin: 10px auto;
-	background: #353526;
-}
-label{
-  display: inline-block;
-  width: 120px;
-  color: white;
-  font-weight: bold;
-  text-align: right;
-}
-[type="text"]{
-  border-radius: 3px;
-  border-color: transparent;
-  outline: none;
-  margin: 5px 0px;
-  padding: 3px;
-}
-button{
-  border-radius: 3px;
-  background-color:rgb(255, 0, 85);
-  border: 1px solid white;
-  color: white;
-  font-size: 15px;
-  font-weight: bold;
-  padding: 3px 7px;
-}
-button:active{
-  color: rgb(255, 0, 85);
-  background-color:white;
-}
-@media only screen and (max-width: 768px) {
-  /* For mobile phones: */
-.centerheading
-{
-text-align:center;
-font-size: 20px;
-color:aqua;
-font-weight:bold;
-text-shadow: 1px 1px 2px black, 0 0 50px rgb(0, 255, 221), 0 0 5px aqua;
-}
-}
-.centerheading
-{
-text-align:center;
-font-size:35px;
-color:aqua;
-font-weight:bold;
-text-shadow: 1px 1px 2px black, 0 0 50px rgb(0, 255, 221), 0 0 5px aqua;
-}
-.title{
-  color: white;
-  font-weight: bold;
-  font-size: x-large;
-}
-[type="button"]{
-  background-color:white;
-  padding: 2px 7px;
-  border-radius: 5px;
-  color: black;
-  border: 1px solid white;
-}
-[type="button"]:active{
-  background-color: rgb(0, 246, 250);
-  color: black;
-}
-.selected{
-  background-color: rgb(0, 246, 250);
-  color: darkblue;
-  border: 2px solid white;
-}
-table{
-  margin: 0px auto;
-}
-span.button{
-  width: 120px;
-  display: inline-block;
-  background-color: red;
-  border: 1px solid white;
-  border-radius: 11px;
-  color: white;
-  font-weight: bold;
-  padding: 6px 5px;
-  text-align: center;
-  cursor: pointer;
-  user-select: none;
-  margin: 2px;
-}
-span.button:active{
-  background-color: rgb(255, 255, 255);
-  color: red;
-}
-.spcl{
-  margin: 10px auto;
-}
-.modalDialog {
-  position: fixed;
-  font-family: Arial, Helvetica, sans-serif;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: rgba(0, 0, 0, 0.1);
-  z-index: 99999;
-  opacity: 0;
-  -webkit-transition: opacity 400ms ease-in;
-  -moz-transition: opacity 400ms ease-in;
-  transition: opacity 400ms ease-in;
-  pointer-events: none;
-}
-.modalDialog{
-  opacity: 1;
-  pointer-events: auto;
-}
-.modalDialog > div {
-  width: 400px;
-  position: relative;
-  margin: 10% auto;
-  padding: 5px 20px 13px 20px;
-  border-radius: 10px;
-  background: -moz-linear-gradient(#2edbe8, #01a6b2);
-  background: -webkit-linear-gradient(#2edbe8, #01a6b2);
-  background: -o-linear-gradient(#2edbe8, #01a6b2);
-}
-.white{
-  color: white;
-  font-weight: bold;
-}
-#webhookurl{
-  width: 100%;
-  border-radius: 7px;
-  padding: 7px;
-}
-.right{
-  text-align: right;
-}
-#websaver{
-  padding: 5px;
-}
-#websaver:active{
-  background-color: #01a6b2;
-  color: white;
-  border: 2px solid white;
-}
-.heart{
-  color: red;
-  font-size: 18px;
-  font-weight: bold;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MacroDroid Pro Controller</title>
+<style>
+:root {
+  --bg: #0b0f19;
+  --card: #141a2a;
+  --card2: #1c2438;
+  --accent: #00f0ff;
+  --accent2: #7b5cff;
+  --pink: #ff2e63;
+  --green: #00e676;
+  --orange: #ff9f1c;
+  --text: #e8eefc;
+  --muted: #8b9bb4;
+  --radius: 18px;
+  --shadow: 0 10px 30px rgba(0,0,0,0.45);
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 16px;
+  padding-bottom: 100px;
+  background-image: 
+    radial-gradient(ellipse at 20% 20%, rgba(0,240,255,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(123,92,255,0.08) 0%, transparent 50%);
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 22px;
+  position: relative;
+}
+
+.header h1 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.header p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,230,118,0.12);
+  color: var(--green);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 50px;
+  margin-top: 10px;
+  border: 1px solid rgba(0,230,118,0.25);
+}
+
+.status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 1.6s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* Section Cards */
+.section {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.5s ease both;
+}
+
+.section:nth-child(2) { animation-delay: 0.05s; }
+.section:nth-child(3) { animation-delay: 0.1s; }
+.section:nth-child(4) { animation-delay: 0.15s; }
+.section:nth-child(5) { animation-delay: 0.2s; }
+.section:nth-child(6) { animation-delay: 0.25s; }
+.section:nth-child(7) { animation-delay: 0.3s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+
+.section-title span.icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, rgba(0,240,255,0.15), rgba(123,92,255,0.15));
+}
+
+/* Grid Buttons */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn {
+  background: var(--card2);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 14px 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 72px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0,240,255,0.2), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn:active {
+  transform: scale(0.94);
+  background: linear-gradient(135deg, rgba(0,240,255,0.2), rgba(123,92,255,0.2));
+  border-color: var(--accent);
+}
+
+.btn:active::after {
+  opacity: 1;
+}
+
+.btn .emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.btn.danger {
+  background: rgba(255,46,99,0.12);
+  border-color: rgba(255,46,99,0.25);
+  color: #ff6b8a;
+}
+
+.btn.danger:active {
+  background: rgba(255,46,99,0.25);
+}
+
+.btn.success {
+  background: rgba(0,230,118,0.1);
+  border-color: rgba(0,230,118,0.25);
+  color: #5dffb0;
+}
+
+/* Form Elements */
+.input-group {
+  margin-bottom: 12px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.input-group input {
+  width: 100%;
+  background: var(--card2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.input-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,240,255,0.12);
+}
+
+.action-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #0b0f19;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 6px;
+  box-shadow: 0 6px 20px rgba(0,240,255,0.25);
+}
+
+.action-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 3px 12px rgba(0,240,255,0.3);
+}
+
+.secondary-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--muted);
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+.secondary-btn:active {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+
+/* Method Tabs */
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: var(--card2);
+  padding: 5px;
+  border-radius: 14px;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 9px 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #0b0f19;
+  box-shadow: 0 4px 12px rgba(0,240,255,0.3);
+}
+
+.panel {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.panel.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: linear-gradient(135deg, #1c2438, #141a2a);
+  color: var(--text);
+  padding: 12px 22px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,240,255,0.3);
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 380px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .btn { min-height: 68px; font-size: 0.78rem; }
+}
 </style>
-  <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
 </head>
 <body>
-  <h1 class="centerheading">Macrodroid Automation</h1>
-  <div class="box">
-    <span class="title">Touch Actions Via </span><br>
-    <span style="color:white;font-weight: bold;">Select Method: </span><input type="button" value="X,Y" class="xy selected">
-    <input type="button" value="Text" class="text">
-    <input type="button" value="View Id" class="id">
-    <input type="button" value="Gesture" class="gesture"><br><br>
-  <section id="xy">
-    <label>X Location: </label>
-    <input type="text" id="X"><br>
-    <label>Y Location: </label>
-    <input type="text" id="Y"><br>
-    <button class="button" onclick="senddata('?X='+val('X')+'&Y='+val('Y'))">Test</button>
-  </section>
-  <section id="text">
-    <label>Text: </label>
-    <input type="text" id="txt"><br>
-    <button class="button" onclick="senddata('?text='+val('txt'))">Test</button>
-  </section>
-  <section id="id">
-    <label>View Id: </label>
-    <input type="text" id="idval"><br>
-    <button class="button" onclick="senddata('?id='+val('idval')+'&subject='+val('subject'))">Test</button>
-  </section>
-  <section id="gesture">
-    <label>SX: </label>
-    <input type="text" id="SX"><br>
-    <label>SY: </label>
-    <input type="text" id="SY"><br>
-    <label>EX: </label>
-    <input type="text" id="EX"><br>
-    <label>EY: </label>
-    <input type="text" id="EY"><br>
-    <button class="button" onclick="senddata('?SX='+val('SX')+'&SY='+val('SY')+'&EX='+val('EX')+'&EY='+val('EY'))">Test</button>
-  </section>
+
+<div class="header">
+  <h1>⚡ MacroDroid Pro</h1>
+  <p>Remote Device Controller</p>
+  <div class="status">Webhook Connected</div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">🚀</span>
+    Quick Actions
   </div>
-  <div class="box">
-    <span class="title">Display Dialog</span><br>
-    <label>Title : </label>
-    <input type="text" id="ttl"><br>
-    <label>Description : </label>
-    <input type="text" id="desc"><br>
-    <button class="button" onclick="senddata('?ttl='+val('ttl')+'&msg='+val('desc')+'&Tempvar=message')">Test</button>
-  </div>
-  <div class="box">
-    <span class="title">Popup (Toast)</span><br>
-    <label>Input : </label>
-    <input type="text" id="popup"><br>
-    <button class="button" onclick="senddata('?popup='+val('popup'))">Test</button>
-  </div>
-  <div class="box">
-    <span class="title">Show Notification</span><br>
-    <label>Title : </label>
-    <input type="text" id="ttln"><br>
-    <label>Description : </label>
-    <input type="text" id="descn"><br>
-    <button class="button" onclick="senddata('?ttl='+val('ttln')+'&msg='+val('descn')+'&Tempvar=notimessage')">Test</button>
-  </div>
-  <div class="box">
-    <span class="title">Speak Something</span><br>
-    <label>Input : </label>
-    <input type="text" id="speak"><br>
-    <button class="button" onclick="senddata('?speak='+val('speak')+'&Tempvar=speak')">Test</button>
-  </div>
-  <div class="box">
-    <span class="title">Floating Text</span><br>
-    <label>Text : </label>
-    <input type="text" id="ftxt"><br>
-    <button class="button" onclick="senddata('?ftext='+val('ftxt')+'&Tempvar=floaton')">Test</button>
-    <button class="button" style="margin: 5px;display: inline;" onclick="senddata('?Tempvar=floatoff')">Disable Floating Text</button>  
-  </div>
-  <div class="box">
-    <span class="title">Paste Text</span><br>
-    <label>Text: </label>
-    <input type="text" id="paste"><br>
-    <button class="button" onclick="senddata('?paste='+val('paste'))">Test</button>
-    <button class="button" style="margin: 5px;display: inline;" onclick="senddata('?paste=clrscr')">Clear Input Field</button>
-  </div>
-  <div class="box">
-    <span class="title">DIM Screen</span><br>
-    <label>Input (0-100) : </label>
-    <input type="text" id="dim"><br>
-    <button class="button" onclick="senddata('?DIM='+val('dim'))">Test</button>
-    <button class="button" style="margin: 5px;display: inline;" onclick="senddata('?Tempvar=dimoff')">Dim Screen Off</button>
-  </div>
-  <div class="box">
-    <span class="title">Control Brightness</span><br>
-    <label>Input (0-100) : </label>
-    <input type="text" id="brts"><br>
-    <button class="button" onclick="senddata('?brightness='+val('brts')+'&Tempvar=bright')">Test</button>
-  </div>
-  <div class="box">
-    <div id="simplevar">
-      <span class="title">Variable Control</span>
-      <br>
-      <label>Var Name : </label>
-      <input type="text" id="varname"><br>
-      <label>Var Value : </label>
-      <input type="text" id="varvalue"><br>
-      <button class="button" onclick="senddata('?'+val('varname')+'='+val('varvalue'))">Test</button>
-      <button class="button" style="margin: 5px;display: inline;" id="advanced">Advanced Mode (Multi Var)</button>
+  <div class="grid">
+    <div class="btn" onclick="fire('?text=HOME')">
+      <span class="emoji">🏠</span>Home
     </div>
-    <div id="advancedvar">
-      <span class="title">Advanced Variable Control</span>
-      <br>
-      <label>Input : </label>
-      <input type="text" id="parameters"><br><br>
-      <span style="color:white;">Example: intparam=13&strparam&boolparam=false</span><br>
-      <button class="button" onclick="senddata('?'+val('parameters'))">Test</button>
-      <button class="button" style="margin: 5px;display: inline;" id="simple">Go To Normal Mode</button>
+    <div class="btn" onclick="fire('?text=BACK')">
+      <span class="emoji">⬅️</span>Back
+    </div>
+    <div class="btn" onclick="fire('?text=RECENT')">
+      <span class="emoji">📑</span>Recent
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=lock')">
+      <span class="emoji">🔒</span>Lock
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=torch')">
+      <span class="emoji">🔦</span>Torch
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=takephoto')">
+      <span class="emoji">📸</span>Selfie
     </div>
   </div>
-  <div>
-    <table>
-      <tr>
-        <td><span class="button" onclick="senddata('?text=RECENT')">Recent</span></td>
-        <td><span class="button" onclick="senddata('?text=HOME')">Home</span></td>
-        <td><span class="button" onclick="senddata('?text=BACK')">Back</span></td>
-      </tr>
-      <tr>
-        <td><span class="button" onclick="senddata('?Tempvar=dndon')">DND ON</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=dndoff')">DND OFF</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=lock')">Lock Screen</span></td>
-      </tr>
-      <tr>
-        <td><span class="button" onclick="senddata('?Tempvar=wifion')">Wifi On</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=wifioff')">Wifi Off</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=torch')">Torch Toggle</span></td>
-      </tr>
-      <tr>
-        <td><span class="button" onclick="senddata('?Tempvar=bton')">Bluetooth On</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=btoff')">Bluetooth Off</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=takephoto')">Take Selfie</span></td>
-      </tr>
-      <tr>
-        <td><span class="button" onclick="senddata('?Tempvar=htspton')">Hotspot On</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=htsptoff')">Hotspot Off</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=fullvolume')">Full Volume</span></td>
-      </tr>
-      <tr>
-        <td><span class="button" onclick="senddata('?text=ENOTIBAR')">Expand Notification Bar</span></td>
-        <td><span class="button" onclick="senddata('?text=CNOTIBAR')">Collapse Notification Bar</span></td>
-        <td><span class="button" onclick="senddata('?Tempvar=alarm')">Ring Alarm At Full Volume</span></td>
-      </tr>
-      <tr style="text-align: center;">
-      <td colspan="3"><span class="button" style="width: 90%;" onclick="senddata('?Tempvar=cancel')">Stop Alarm</span></td>
-      </tr>
-      <tr style="text-align: center;">
-      <td colspan="3"><span class="button" style="width: 90%;" onclick="senddata('?Tempvar=DISABLEMACRODROID')">Disable MD</span></td>
-      </tr>
-    </table>
+</div>
+
+<!-- TOUCH CONTROLS -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">👆</span>
+    Touch Controls
   </div>
-    <div id="openModal" class="modalDialog">
-      <div>
-        <h2>Enter Your Webhook URL Below: </h2>
-        <input type="text" id="webhookurl" placeholder="Example: https://trigger.macrodroid.com/13062002-ca94-3fqe-a042-cf22cffe6bwc/enablewebhook">
-        <p><span class="white">Disclaimer:</span> This website will never store or send your private information like webhook url and your activities. For Confirmation, You Can Inspect Code. Thank You<br><br><span class="white">Developer:</span> <span class="heart">&#10084;</span> From Dhruv Chauhan</p><span id="warning"></span>
-        <div class="right"><input type="button" id="websaver" value="Proceed"></div>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="xy">X,Y</div>
+    <div class="tab" data-tab="text">Text</div>
+    <div class="tab" data-tab="id">View ID</div>
+    <div class="tab" data-tab="gesture">Gesture</div>
+  </div>
+
+  <div class="panel active" id="panel-xy">
+    <div class="grid-2">
+      <div class="input-group">
+        <label>X Location</label>
+        <input type="number" id="X" placeholder="e.g. 500">
+      </div>
+      <div class="input-group">
+        <label>Y Location</label>
+        <input type="number" id="Y" placeholder="e.g. 800">
       </div>
     </div>
-  <center>
-    <div class="spcl" style="color: white;text-align:center;font-weight: bold;">Note: You must have to install macro named <a href="https://macrodroidlink.com/macrostore?id=12667" style="color: rgb(0, 221, 255);text-decoration: none;font-weight: bold;display: inline;">"Control Device Remotely (From Website) 15+ Features"</a> in your device to use this Web controller.<br><br>Developed By: <span class="heart">&#10084;</span> From Dhruv Chauhan</div>
-  </center>
-  <iframe src="" width="0" height="0" style="display:none"></iframe>
-</body>
+    <button class="action-btn" onclick="fire('?X='+v('X')+'&Y='+v('Y'))">Tap at X,Y</button>
+  </div>
+
+  <div class="panel" id="panel-text">
+    <div class="input-group">
+      <label>Text to Find & Tap</label>
+      <input type="text" id="txt" placeholder="Button text...">
+    </div>
+    <button class="action-btn" onclick="fire('?text='+v('txt'))">Tap by Text</button>
+  </div>
+
+  <div class="panel" id="panel-id">
+    <div class="input-group">
+      <label>View ID</label>
+      <input type="text" id="idval" placeholder="com.example:id/button">
+    </div>
+    <button class="action-btn" onclick="fire('?id='+v('idval'))">Tap by ID</button>
+  </div>
+
+  <div class="panel" id="panel-gesture">
+    <div class="grid-2">
+      <div class="input-group">
+        <label>Start X</label>
+        <input type="number" id="SX" placeholder="SX">
+      </div>
+      <div class="input-group">
+        <label>Start Y</label>
+        <input type="number" id="SY" placeholder="SY">
+      </div>
+      <div class="input-group">
+        <label>End X</label>
+        <input type="number" id="EX" placeholder="EX">
+      </div>
+      <div class="input-group">
+        <label>End Y</label>
+        <input type="number" id="EY" placeholder="EY">
+      </div>
+    </div>
+    <button class="action-btn" onclick="fire('?SX='+v('SX')+'&SY='+v('SY')+'&EX='+v('EX')+'&EY='+v('EY'))">Perform Gesture</button>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS & MEDIA -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">🔔</span>
+    Notifications & Media
+  </div>
+
+  <div class="input-group">
+    <label>Notification Title</label>
+    <input type="text" id="ttln" placeholder="Title...">
+  </div>
+  <div class="input-group">
+    <label>Notification Message</label>
+    <input type="text" id="descn" placeholder="Message...">
+  </div>
+  <button class="action-btn" onclick="fire('?ttl='+v('ttln')+'&msg='+v('descn')+'&Tempvar=notimessage')">Show Notification</button>
+
+  <div style="height:14px"></div>
+
+  <div class="input-group">
+    <label>Toast Message</label>
+    <input type="text" id="popup" placeholder="Quick popup text...">
+  </div>
+  <button class="action-btn" onclick="fire('?popup='+v('popup'))">Show Toast</button>
+
+  <div style="height:14px"></div>
+
+  <div class="input-group">
+    <label>Speak Text</label>
+    <input type="text" id="speak" placeholder="What should I say?">
+  </div>
+  <button class="action-btn" onclick="fire('?speak='+v('speak')+'&Tempvar=speak')">Speak</button>
+
+  <div style="height:14px"></div>
+
+  <div class="input-group">
+    <label>Floating Text</label>
+    <input type="text" id="ftxt" placeholder="Overlay text...">
+  </div>
+  <button class="action-btn" onclick="fire('?ftext='+v('ftxt')+'&Tempvar=floaton')">Show Floating Text</button>
+  <button class="secondary-btn" onclick="fire('?Tempvar=floatoff')">Disable Floating Text</button>
+</div>
+
+<!-- SCREEN CONTROL -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">💡</span>
+    Screen Control
+  </div>
+
+  <div class="input-group">
+    <label>Brightness (0-100)</label>
+    <input type="number" id="brts" min="0" max="100" placeholder="50">
+  </div>
+  <button class="action-btn" onclick="fire('?brightness='+v('brts')+'&Tempvar=bright')">Set Brightness</button>
+
+  <div style="height:14px"></div>
+
+  <div class="input-group">
+    <label>Dim Level (0-100)</label>
+    <input type="number" id="dim" min="0" max="100" placeholder="30">
+  </div>
+  <button class="action-btn" onclick="fire('?DIM='+v('dim'))">Dim Screen</button>
+  <button class="secondary-btn" onclick="fire('?Tempvar=dimoff')">Turn Dim Off</button>
+</div>
+
+<!-- DEVICE CONTROLS -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">📱</span>
+    Device Controls
+  </div>
+  <div class="grid">
+    <div class="btn" onclick="fire('?Tempvar=wifion')">
+      <span class="emoji">📶</span>WiFi On
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=wifioff')">
+      <span class="emoji">📵</span>WiFi Off
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=bton')">
+      <span class="emoji">🔵</span>BT On
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=btoff')">
+      <span class="emoji">⚪</span>BT Off
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=htspton')">
+      <span class="emoji">📡</span>Hotspot On
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=htsptoff')">
+      <span class="emoji">📴</span>Hotspot Off
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=dndon')">
+      <span class="emoji">🔕</span>DND On
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=dndoff')">
+      <span class="emoji">🔔</span>DND Off
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=fullvolume')">
+      <span class="emoji">🔊</span>Full Vol
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION BAR & ALARM -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">📋</span>
+    System Actions
+  </div>
+  <div class="grid">
+    <div class="btn" onclick="fire('?text=ENOTIBAR')">
+      <span class="emoji">⬇️</span>Expand Noti
+    </div>
+    <div class="btn" onclick="fire('?text=CNOTIBAR')">
+      <span class="emoji">⬆️</span>Collapse Noti
+    </div>
+    <div class="btn" onclick="fire('?Tempvar=alarm')">
+      <span class="emoji">⏰</span>Ring Alarm
+    </div>
+  </div>
+  <div style="height:10px"></div>
+  <div class="grid-2">
+    <div class="btn" onclick="fire('?Tempvar=cancel')">
+      <span class="emoji">🛑</span>Stop Alarm
+    </div>
+    <div class="btn danger" onclick="fire('?Tempvar=DISABLEMACRODROID')">
+      <span class="emoji">⚠️</span>Disable MD
+    </div>
+  </div>
+</div>
+
+<!-- PASTE TEXT -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">📋</span>
+    Paste Text
+  </div>
+  <div class="input-group">
+    <label>Text to Paste</label>
+    <input type="text" id="paste" placeholder="Text to paste into focused field...">
+  </div>
+  <button class="action-btn" onclick="fire('?paste='+v('paste'))">Paste Text</button>
+  <button class="secondary-btn" onclick="fire('?paste=clrscr')">Clear Input Field</button>
+</div>
+
+<!-- VARIABLE CONTROL -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">⚙️</span>
+    Variable Control
+  </div>
+
+  <div id="simpleVar">
+    <div class="input-group">
+      <label>Variable Name</label>
+      <input type="text" id="varname" placeholder="myVar">
+    </div>
+    <div class="input-group">
+      <label>Variable Value</label>
+      <input type="text" id="varvalue" placeholder="value">
+    </div>
+    <button class="action-btn" onclick="fire('?'+v('varname')+'='+v('varvalue'))">Set Variable</button>
+    <button class="secondary-btn" onclick="toggleAdvanced(true)">Advanced Mode (Multi Var)</button>
+  </div>
+
+  <div id="advancedVar" style="display:none">
+    <div class="input-group">
+      <label>Parameters</label>
+      <input type="text" id="parameters" placeholder="intparam=13&strparam=hello&boolparam=false">
+    </div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">
+      Example: intparam=13&strparam=hello&boolparam=false
+    </p>
+    <button class="action-btn" onclick="fire('?'+v('parameters'))">Send Multi Variables</button>
+    <button class="secondary-btn" onclick="toggleAdvanced(false)">Back to Simple Mode</button>
+  </div>
+</div>
+
+<!-- DIALOG -->
+<div class="section">
+  <div class="section-title">
+    <span class="icon">💬</span>
+    Display Dialog
+  </div>
+  <div class="input-group">
+    <label>Title</label>
+    <input type="text" id="ttl" placeholder="Dialog title...">
+  </div>
+  <div class="input-group">
+    <label>Message</label>
+    <input type="text" id="desc" placeholder="Dialog message...">
+  </div>
+  <button class="action-btn" onclick="fire('?ttl='+v('ttl')+'&msg='+v('desc')+'&Tempvar=message')">Show Dialog</button>
+</div>
+
+<div class="footer">
+  Required Macro: <a href="https://macrodroidlink.com/macrostore?id=12667" target="_blank">Control Device Remotely</a><br>
+  Built with ⚡ for power users
+</div>
+
+<div class="toast" id="toast">Action Sent ✓</div>
+
+<iframe id="worker" src="" style="display:none;width:0;height:0"></iframe>
+
 <script>
+const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook";
 
-var link = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook";
-
-function val(id){
-	return $("#"+id).val();
+function v(id) {
+  return document.getElementById(id).value.trim();
 }
 
-function senddata(data){
-	$("iframe").attr("src", link + data);
+function fire(query) {
+  const url = WEBHOOK + query;
+  document.getElementById('worker').src = url;
+  
+  // Show toast
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1800);
 }
 
-$(document).ready(function(){
-	// Auto set webhook
-	$("#webhookurl").val("https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook");
-	link = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook";
-	$(".modalDialog").hide(0);   // hide the popup forever
-
-	$(".title").append("<br>");
-	$("button").before("<br>");
-	$(".xy").trigger("click");
-	$("#simple").trigger("click");
-	$("iframe").hide();
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
 });
 
-$(".xy").click(function(){
-	$("section").hide();
-	$("#xy").show();
-	$("[type='button']").removeClass("selected");
-	$(this).addClass("selected");
-});
-
-$(".text").click(function(){
-	$("section").hide();
-	$("#text").show();
-	$("[type='button']").removeClass("selected");
-	$(this).addClass("selected");
-});
-
-$(".gesture").click(function(){
-	$("section").hide();
-	$("#gesture").show();
-	$("[type='button']").removeClass("selected");
-	$(this).addClass("selected");
-});
-
-$(".id").click(function(){
-	$("section").hide();
-	$("#id").show();
-	$("[type='button']").removeClass("selected");
-	$(this).addClass("selected");
-});
-
-$("#advanced").click(function(){
-	$("#advancedvar").show();
-	$("#simplevar").hide();
-});
-
-$("#simple").click(function(){
-	$("#simplevar").show();
-	$("#advancedvar").hide();
-});
-
+function toggleAdvanced(show) {
+  document.getElementById('simpleVar').style.display = show ? 'none' : 'block';
+  document.getElementById('advancedVar').style.display = show ? 'block' : 'none';
+}
 </script>
+</body>
 </html>
