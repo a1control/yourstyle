@@ -752,6 +752,8 @@ input[type="range"]::-webkit-slider-thumb {
   </div>
 </div>
 
+<div class="card"><div class="card-title">More Controls</div><div id="more"></div><datalist id="macs"><option value="♾️ Infinite Clipboard 📋"><option value="Music temporarily paused 🔇"><option value="Volume buttons = Camera 📷"><option value="Dash notification tile controller"><option value="Max charging speed"><option value="Auto"><option value="Internet 5g changer"><option value="🔍 Search Page For Text 📃"><option value="Ani torch"><option value="Rapird"><option value="NO Instagram Scrolling V1"><option value="Restore dim"><option value="Private DNS Quick Setting"><option value="Pause music"><option value="Clear notification"><option value="Generate View"><option value="🎱 Pool Shark (Billiards game) 🦈"><option value="Prevent from unknown action"><option value="FAHHHHH"><option value="Chrome ani"><option value="Red widget"><option value="Take selfie via sms"><option value="Leave me to complete my charge"><option value="Edge light controller"><option value="Temp maintenance warning"><option value="🏃 Run Macros with Voice Commands 🗣️"><option value="Torch light v1.0"><option value="Advanced Instagram Downloader Public V1.0"><option value="Smart torch " on " dim light ."><option value="Shake Torch"><option value="Get macro list new"><option value="VÈ"><option value="Restore to normal - of prevent"><option value="Look up my macros"><option value="4G Changer"><option value="Bt device connected to Spotify or etc (AUTO)"><option value="💾 Floating Ram/Temp🌡"><option value="Clipboard Manager ✌🏻"><option value="Amination  camera"><option value="Full charge attention"><option value="Force TO CHARGE PHONE Fix"><option value="Volume change when you do work with song"><option value="Animination headphone"><option value="🏓 Pong Classic ✨️v2"><option value="Ani whatsapp"><option value="Y"><option value="Unlock animation"><option value="Intruder Photo + Fake Shutdown"><option value="🪙 Coin Flipper 🐬"><option value="H"><option value="FloatingTextVarChange(search page for text)"><option value="shake to torch"><option value="Animation music player"><option value="No Swiping 🚫👆🚫"><option value="🛡️Theft protection🛡️"><option value="Take rear pic via sms"><option value="Lock your device by sms from any no."><option value="Prevent 2"><option value="Find your phone by location/sound"><option value="Notification edge style"><option value="Instagram Downloader ⛔ V2"><option value="Flip and lock"><option value="🔋 Bypass Battery - Pass_Through (Updated)"><option value="App Guardian 🛡️"><option value="Viewpoints personal"><option value="Folder picker"><option value="Helper in play music"><option value="V2"><option value="Google Assistant"><option value="Mobile Guard - Updated"><option value="Count charging time"><option value="M"><option value="Ff"><option value="Dash notification"><option value="🏓 Pong Classic ✨️"><option value="Temperature shown by  swipe top left"><option value="Clear Dictionary"><option value="Pin/Unpin Selection"><option value="Extra dim v2"><option value="No tap : Bend & Control 🔀"><option value="Clipboard Manager 📜"><option value="Find closest match (array)"></datalist></div>
+
 <div class="toast" id="toast">Action sent</div>
 
 <div class="modal-bg" id="modal">
@@ -884,7 +886,7 @@ function steps(i){const out=[];
 
 // Canvas keeps the same aspect ratio as the phone screen
 function fit(){const W=SW(),H=SH(),w0=$('canvasWrap').clientWidth||300;
-  let w=w0,h=w0*H/W;const m=innerHeight*.6;if(h>m){h=m;w=h*W/H}
+  let w=w0,h=Math.min(w0*H/W,innerHeight*.75);
   cv.style.width=w+'px';cv.style.height=h+'px';cv.style.margin='0 auto';cv.style.touchAction='none';
   cv.width=w*dpr;cv.height=h*dpr;draw()}
 function draw(){const w=cv.clientWidth,h=cv.clientHeight;
@@ -947,6 +949,12 @@ async function exec(ids){
   document.querySelectorAll('.btn').forEach(b=>b.classList.remove('disabled'));
   showToast(stopReq?'Stopped':'Sequence complete')}
 
+const CMDS=[["playpause", "Play/Pause", "Media", 0], ["play", "Play", "Media", 0], ["pause", "Pause", "Media", 0], ["volup", "Volume +", "Media", 0], ["voldown", "Volume -", "Media", 0], ["volpopup", "Volume bar", "Media", 0], ["screenon", "Screen on", "Screen", 0], ["screenoff", "Screen off", "Screen", 0], ["rotateon", "Rotate on", "Screen", 0], ["rotateoff", "Rotate off", "Screen", 0], ["awakeon", "Keep awake on", "Screen", 0], ["awakeoff", "Keep awake off", "Screen", 0], ["daydream", "Screensaver", "Screen", 0], ["rearphoto", "Rear photo", "Camera and light", 0], ["torchon", "Torch on", "Camera and light", 0], ["torchoff", "Torch off", "Camera and light", 0], ["vibA", "Vibrate A", "Device", 0], ["vibB", "Vibrate B", "Device", 0], ["edgelight", "Edge light", "Device", 0], ["clearnoti", "Clear notifications", "Device", 0], ["opensettings", "Open Settings", "Device", 0], ["saytime", "Say time", "Speak", 0], ["saybattery", "Say battery", "Speak", 0], ["openurl", "Open website", "Run with input", "https://..."], ["launchapp", "Launch app (package)", "Run with input", "com.whatsapp"], ["setclip", "Set clipboard", "Run with input", "text to copy"], ["runmacro", "Run any macro by name", "Run with input", "exact macro name"]];
+(function(){const root=$('more');let g='',box;
+CMDS.forEach(([k,l,gr,p])=>{if(gr!=g){g=gr;const t=document.createElement('div');t.className='card-title';t.style.margin='14px 0 8px';t.textContent=gr;root.appendChild(t);box=document.createElement('div');box.className='grid-3';root.appendChild(box)}
+ if(!p){const b=document.createElement('div');b.className='btn';b.textContent=l;b.onclick=()=>send('?Tempvar='+k);box.appendChild(b)}
+ else{const w=document.createElement('div');w.style.cssText='grid-column:1/-1';w.innerHTML=`<div class="field"><label>${l}</label><input type="text" placeholder="${p}"${k=='runmacro'?' list="macs"':''}></div>`;
+  const b=document.createElement('div');b.className='btn primary';b.textContent=l;b.onclick=()=>{const v=w.querySelector('input').value.trim();if(v)send('?Tempvar='+k+'&p1='+encodeURIComponent(v))};w.appendChild(b);box.appendChild(w)}})})();
 window.addEventListener('resize',fit);
 fit();refresh();
 </script>
