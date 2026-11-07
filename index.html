@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MacroDroid Ultimate Controller</title>
+<title>MacroDroid Controller</title>
 <style>
 :root {
-  --bg: #070a12;
-  --surface: #0f1524;
-  --surface2: #161e30;
-  --border: rgba(255,255,255,0.06);
+  --bg: #080b14;
+  --card: #101625;
+  --card-hover: #151d30;
+  --border: rgba(255,255,255,0.07);
   --accent: #3b82f6;
-  --accent2: #8b5cf6;
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
+  --accent-dim: rgba(59,130,246,0.15);
+  --purple: #8b5cf6;
+  --green: #22c55e;
+  --red: #ef4444;
   --text: #f1f5f9;
   --muted: #64748b;
   --radius: 16px;
@@ -25,119 +25,109 @@
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  padding: 0 0 110px 0;
-  line-height: 1.4;
+  padding: 16px;
+  padding-bottom: 40px;
+  background-image: radial-gradient(ellipse at top, rgba(59,130,246,0.06), transparent 60%);
 }
 
-/* ========== HEADER ========== */
+/* Header */
 .header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(7,10,18,0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  text-align: center;
+  margin-bottom: 20px;
+  padding-top: 8px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-mark {
-  width: 34px;
-  height: 34px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 14px;
-  color: white;
-}
-
-.logo-text {
+.header h1 {
+  font-size: 1.45rem;
   font-weight: 700;
-  font-size: 1.05rem;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.4px;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.status-pill {
-  display: flex;
+.header .sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.status {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(16,185,129,0.12);
-  color: var(--success);
+  margin-top: 10px;
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 5px 11px;
+  color: var(--green);
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.2);
+  padding: 4px 12px;
   border-radius: 99px;
-  border: 1px solid rgba(16,185,129,0.25);
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
-  background: var(--success);
+  background: var(--green);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,100% { opacity:1; }
+  50% { opacity:0.35; }
 }
 
-/* ========== MAIN ========== */
-.main {
-  padding: 16px;
-  max-width: 520px;
-  margin: 0 auto;
+/* Cooldown bar */
+.cooldown-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 99px;
+  margin: 12px 0 18px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-/* ========== SECTION ========== */
-.section {
-  background: var(--surface);
+.cooldown-bar.active {
+  opacity: 1;
+}
+
+.cooldown-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  border-radius: 99px;
+  transition: width 0.05s linear;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  padding: 16px;
   margin-bottom: 14px;
-  overflow: hidden;
 }
 
-.section-head {
-  padding: 14px 16px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-}
-
-.section-title {
-  font-size: 0.82rem;
+.card-title {
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.7px;
   color: var(--muted);
+  margin-bottom: 14px;
 }
 
-.section-body {
-  padding: 14px 16px 16px;
-}
-
-/* ========== BUTTONS ========== */
+/* Buttons */
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -150,78 +140,63 @@ body {
   gap: 8px;
 }
 
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
 .btn {
-  background: var(--surface2);
+  background: #182033;
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: 12px;
-  padding: 13px 6px;
-  font-size: 0.78rem;
+  padding: 13px 8px;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: center;
-  min-height: 48px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
 }
 
-.btn:active {
+.btn:active:not(.disabled) {
   transform: scale(0.96);
-  background: rgba(59,130,246,0.18);
-  border-color: rgba(59,130,246,0.4);
+  background: var(--accent-dim);
+  border-color: rgba(59,130,246,0.45);
   color: #93c5fd;
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
   border: none;
   color: white;
   font-weight: 700;
+  min-height: 48px;
 }
 
-.btn.primary:active {
-  opacity: 0.9;
-  transform: scale(0.97);
+.btn.primary:active:not(.disabled) {
+  opacity: 0.88;
+  transform: scale(0.975);
 }
 
 .btn.danger {
   background: rgba(239,68,68,0.1);
-  border-color: rgba(239,68,68,0.25);
+  border-color: rgba(239,68,68,0.28);
   color: #f87171;
 }
 
-.btn.danger:active {
-  background: rgba(239,68,68,0.22);
+.btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
-.btn.success {
-  background: rgba(16,185,129,0.1);
-  border-color: rgba(16,185,129,0.25);
-  color: #34d399;
-}
-
-.btn.full {
-  width: 100%;
-  min-height: 46px;
-}
-
-/* ========== FORMS ========== */
+/* Forms */
 .field {
   margin-bottom: 12px;
 }
 
 .field label {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--muted);
   margin-bottom: 5px;
@@ -229,21 +204,21 @@ body {
   letter-spacing: 0.4px;
 }
 
-.field input {
+.field input[type="text"],
+.field input[type="number"] {
   width: 100%;
-  background: var(--surface2);
+  background: #182033;
   border: 1px solid var(--border);
   border-radius: 11px;
   padding: 12px 14px;
   color: var(--text);
   font-size: 0.92rem;
   outline: none;
-  transition: border 0.2s, box-shadow 0.2s;
+  transition: border 0.2s;
 }
 
 .field input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
 }
 
 .field-row {
@@ -252,10 +227,61 @@ body {
   gap: 10px;
 }
 
-/* ========== TABS ========== */
+/* Slider */
+.slider-wrap {
+  margin-bottom: 14px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.slider-header label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.slider-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 2px 10px;
+  border-radius: 99px;
+  min-width: 42px;
+  text-align: center;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #1e293b;
+  border-radius: 99px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.4);
+  border: 2px solid #0f172a;
+}
+
+/* Tabs */
 .tabs {
   display: flex;
-  background: var(--surface2);
+  background: #182033;
   border-radius: 11px;
   padding: 3px;
   margin-bottom: 14px;
@@ -265,8 +291,8 @@ body {
 .tab {
   flex: 1;
   text-align: center;
-  padding: 8px 4px;
-  font-size: 0.75rem;
+  padding: 9px 4px;
+  font-size: 0.74rem;
   font-weight: 600;
   color: var(--muted);
   border-radius: 9px;
@@ -280,82 +306,35 @@ body {
 }
 
 .panel { display: none; }
-.panel.active { display: block; animation: fade 0.25s ease; }
+.panel.active { display: block; }
 
-@keyframes fade {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 14px 0;
 }
 
-/* ========== BOTTOM BAR ========== */
-.bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(15,21,36,0.92);
-  backdrop-filter: blur(18px);
-  border-top: 1px solid var(--border);
-  padding: 10px 14px 18px;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  z-index: 200;
-}
-
-.bottom-btn {
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 8px 2px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.bottom-btn .icon-shape {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-}
-
-.bottom-btn:active {
-  color: var(--accent);
-  background: rgba(59,130,246,0.1);
-}
-
-.bottom-btn:active .icon-shape {
-  background: rgba(59,130,246,0.25);
-  border-color: var(--accent);
-}
-
-/* ========== TOAST ========== */
+/* Toast */
 .toast {
   position: fixed;
-  top: 70px;
+  bottom: 28px;
   left: 50%;
-  transform: translateX(-50%) translateY(-20px);
-  background: var(--surface2);
+  transform: translateX(-50%) translateY(80px);
+  background: #1e293b;
   color: var(--text);
-  padding: 10px 20px;
+  padding: 11px 20px;
   border-radius: 99px;
   font-size: 0.84rem;
   font-weight: 600;
-  border: 1px solid rgba(59,130,246,0.35);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  border: 1px solid rgba(59,130,246,0.3);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
   z-index: 999;
   opacity: 0;
   pointer-events: none;
   transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
-  white-space: nowrap;
+  max-width: 90%;
+  text-align: center;
 }
 
 .toast.show {
@@ -363,18 +342,31 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ========== DIVIDER ========== */
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 14px 0;
+/* Combo status */
+.combo-status {
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 0.82rem;
+  display: none;
 }
 
-/* ========== CONFIRM MODAL ========== */
-.modal-overlay {
+.combo-status.active {
+  display: block;
+}
+
+.combo-status .step {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Modal */
+.modal-bg {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.72);
   z-index: 500;
   display: none;
   align-items: center;
@@ -382,17 +374,15 @@ body {
   padding: 20px;
 }
 
-.modal-overlay.show {
-  display: flex;
-}
+.modal-bg.show { display: flex; }
 
 .modal {
-  background: var(--surface);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 22px;
   width: 100%;
-  max-width: 320px;
+  max-width: 300px;
   text-align: center;
 }
 
@@ -403,7 +393,7 @@ body {
 
 .modal p {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   margin-bottom: 18px;
 }
 
@@ -416,315 +406,264 @@ body {
 </head>
 <body>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="logo">
-    <div class="logo-mark">M</div>
-    <div class="logo-text">MacroDroid</div>
-  </div>
-  <div class="status-pill">
+<div class="header">
+  <h1>MacroDroid Controller</h1>
+  <div class="sub">Remote Device Control</div>
+  <div class="status">
     <div class="status-dot"></div>
-    Connected
+    Webhook Ready
   </div>
-</header>
-
-<main class="main">
-
-  <!-- QUICK NAV -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Navigation</div>
-    </div>
-    <div class="section-body">
-      <div class="grid-3">
-        <div class="btn" onclick="fire('?text=HOME')">Home</div>
-        <div class="btn" onclick="fire('?text=BACK')">Back</div>
-        <div class="btn" onclick="fire('?text=RECENT')">Recent</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOUCH -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Touch Actions</div>
-    </div>
-    <div class="section-body">
-      <div class="tabs">
-        <div class="tab active" data-tab="xy">X,Y</div>
-        <div class="tab" data-tab="text">Text</div>
-        <div class="tab" data-tab="id">View ID</div>
-        <div class="tab" data-tab="gesture">Gesture</div>
-      </div>
-
-      <div class="panel active" id="p-xy">
-        <div class="field-row">
-          <div class="field">
-            <label>X</label>
-            <input type="number" id="X" placeholder="500">
-          </div>
-          <div class="field">
-            <label>Y</label>
-            <input type="number" id="Y" placeholder="900">
-          </div>
-        </div>
-        <button class="btn primary full" onclick="fire('?X='+v('X')+'&Y='+v('Y'))">Execute Tap</button>
-      </div>
-
-      <div class="panel" id="p-text">
-        <div class="field">
-          <label>Text to Tap</label>
-          <input type="text" id="txt" placeholder="Button or text content">
-        </div>
-        <button class="btn primary full" onclick="fire('?text='+v('txt'))">Tap by Text</button>
-      </div>
-
-      <div class="panel" id="p-id">
-        <div class="field">
-          <label>View ID</label>
-          <input type="text" id="idval" placeholder="com.app:id/element">
-        </div>
-        <button class="btn primary full" onclick="fire('?id='+v('idval'))">Tap by ID</button>
-      </div>
-
-      <div class="panel" id="p-gesture">
-        <div class="field-row">
-          <div class="field"><label>Start X</label><input type="number" id="SX" placeholder="SX"></div>
-          <div class="field soft"><label>Start Y</label><input type="number" id="SY" placeholder="SY"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>End X</label><input type="number" id="EX" placeholder="EX"></div>
-          <div class="field"><label>End Y</label><input type="number" id="EY" placeholder="EY"></div>
-        </div>
-        <button class="btn primary full" onclick="fire('?SX='+v('SX')+'&SY='+v('SY')+'&EX='+v('EX')+'&EY='+v('EY'))">Run Gesture</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MEDIA & TEXT -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Media & Text</div>
-    </div>
-    <div class="section-body">
-      <div class="field">
-        <label>Speak</label>
-        <input type="text" id="speak" placeholder="Text to speak">
-      </div>
-      <button class="btn primary full" onclick="fire('?speak='+v('speak')+'&Tempvar=speak')">Speak Now</button>
-
-      <div class="divider"></div>
-
-      <div class="field">
-        <label>Toast Message</label>
-        <input type="text" id="popup" placeholder="Quick toast">
-      </div>
-      <button class="btn primary full" onclick="fire('?popup='+v('popup'))">Show Toast</button>
-
-      <div class="divider"></div>
-
-      <div class="field">
-        <label>Floating Text</label>
-        <input type="text" id="ftxt" placeholder="Overlay text">
-      </div>
-      <div class="grid-2">
-        <button class="btn primary" onclick="fire('?ftext='+v('ftxt')+'&Tempvar=floaton')">Show Float</button>
-        <button class="btn" onclick="fire('?Tempvar=floatoff')">Hide Float</button>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="field">
-        <label>Paste Text</label>
-        <input type="text" id="paste" placeholder="Text to paste">
-      </div>
-      <div class="grid-2">
-        <button class="btn primary" onclick="fire('?paste='+v('paste'))">Paste</button>
-        <button class="btn" onclick="fire('?paste=clrscr')">Clear Field</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NOTIFICATIONS -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Notifications</div>
-    </div>
-    <div class="section-body">
-      <div class="field">
-        <label>Title</label>
-        <input type="text" id="ttln" placeholder="Notification title">
-      </div>
-      <div class="field">
-        <label>Message</label>
-        <input type="text" id="descn" placeholder="Notification body">
-      </div>
-      <button class="btn primary full" onclick="fire('?ttl='+v('ttln')+'&msg='+v('descn')+'&Tempvar=notimessage')">Send Notification</button>
-
-      <div class="divider"></div>
-
-      <div class="field">
-        <label>Dialog Title</label>
-        <input type="text" id="ttl" placeholder="Dialog title">
-      </div>
-      <div class="field">
-        <label>Dialog Message</label>
-        <input type="text" id="desc" placeholder="Dialog content">
-      </div>
-      <button class="btn primary full" onclick="fire('?ttl='+v('ttl')+'&msg='+v('desc')+'&Tempvar=message')">Show Dialog</button>
-    </div>
-  </div>
-
-  <!-- SCREEN -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Screen</div>
-    </div>
-    <div class="section-body">
-      <div class="field">
-        <label>Brightness (0-100)</label>
-        <input type="number" id="brts" min="0" max="100" placeholder="70">
-      </div>
-      <button class="btn primary full" onclick="fire('?brightness='+v('brts')+'&Tempvar=bright')">Set Brightness</button>
-
-      <div class="divider"></div>
-
-      <div class="field">
-        <label>Dim Level (0-100)</label>
-        <input type="number" id="dim" min="0" max="100" placeholder="40">
-      </div>
-      <div class="grid-2">
-        <button class="btn primary" onclick="fire('?DIM='+v('dim'))">Apply Dim</button>
-        <button class="btn" onclick="fire('?Tempvar=dimoff')">Remove Dim</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONNECTIVITY -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Connectivity</div>
-    </div>
-    <div class="section-body">
-      <div class="grid-3">
-        <div class="btn" onclick="fire('?Tempvar=wifion')">WiFi On</div>
-        <div class="btn" onclick="fire('?Tempvar=wifioff')">WiFi Off</div>
-        <div class="btn" onclick="fire('?Tempvar=torch')">Torch</div>
-        <div class="btn" onclick="fire('?Tempvar=bton')">BT On</div>
-        <div class="btn" onclick="fire('?Tempvar=btoff')">BT Off</div>
-        <div class="btn" onclick="fire('?Tempvar=takephoto')">Selfie</div>
-        <div class="btn" onclick="fire('?Tempvar=htspton')">Hotspot On</div>
-        <div class="btn" onclick="fire('?Tempvar=htsptoff')">Hotspot Off</div>
-        <div class="btn" onclick="fire('?Tempvar=fullvolume')">Full Vol</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SYSTEM -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">System</div>
-    </div>
-    <div class="section-body">
-      <div class="grid-3">
-        <div class="btn" onclick="fire('?Tempvar=dndon')">DND On</div>
-        <div class="btn" onclick="fire('?Tempvar=dndoff')">DND Off</div>
-        <div class="btn" onclick="fire('?Tempvar=lock')">Lock</div>
-        <div class="btn" onclick="fire('?text=ENOTIBAR')">Expand Noti</div>
-        <div class="btn" onclick="fire('?text=CNOTIBAR')">Collapse Noti</div>
-        <div class="btn" onclick="fire('?Tempvar=alarm')">Ring Alarm</div>
-      </div>
-      <div class="divider"></div>
-      <div class="grid-2">
-        <div class="btn" onclick="fire('?Tempvar=cancel')">Stop Alarm</div>
-        <div class="btn danger" onclick="confirmDisable()">Disable MD</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- VARIABLES -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Variables</div>
-    </div>
-    <div class="section-body">
-      <div id="simpleMode">
-        <div class="field">
-          <label>Variable Name</label>
-          <input type="text" id="varname" placeholder="myVariable">
-        </div>
-        <div class="field">
-          <label>Value</label>
-          <input type="text" id="varvalue" placeholder="value">
-        </div>
-        <button class="btn primary full" onclick="fire('?'+v('varname')+'='+v('varvalue'))">Set Variable</button>
-        <button class="btn full" style="margin-top:8px" onclick="toggleVarMode(true)">Switch to Advanced</button>
-      </div>
-
-      <div id="advancedMode" style="display:none">
-        <div class="field">
-          <label>Multi Parameters</label>
-          <input type="text" id="parameters" placeholder="int=13&str=hello&bool=false">
-        </div>
-        <p style="font-size:0.75rem;color:var(--muted);margin:-4px 0 12px">Format: key=value&key2=value2</p>
-        <button class="btn primary full" onclick="fire('?'+v('parameters'))">Send Multi Vars</button>
-        <button class="btn full" style="margin-top:8px" onclick="toggleVarMode(false)">Back to Simple</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SMART COMBOS (New Feature) -->
-  <div class="section">
-    <div class="section-head">
-      <div class="section-title">Smart Combos</div>
-    </div>
-    <div class="section-body">
-      <div class="grid-2">
-        <div class="btn" onclick="combo(['?Tempvar=dndon','?Tempvar=fullvolume'])">Focus Mode</div>
-        <div class="btn" onclick="combo(['?Tempvar=wifioff','?Tempvar=btoff','?Tempvar=dndon'])">Airplane Lite</div>
-        <div class="btn" onclick="combo(['?Tempvar=wifion','?Tempvar=bton'])">Connect All</div>
-        <div class="btn" onclick="combo(['?text=HOME','?Tempvar=lock'])">Home + Lock</div>
-      </div>
-    </div>
-  </div>
-
-</main>
-
-<!-- BOTTOM QUICK BAR -->
-<div class="bottom-bar">
-  <button class="bottom-btn" onclick="fire('?text=HOME')">
-    <div class="icon-shape"></div>
-    Home
-  </button>
-  <button class="bottom-btn" onclick="fire('?text=BACK')">
-    <div class="icon-shape"></div>
-    Back
-  </button>
-  <button class="bottom-btn" onclick="fire('?Tempvar=lock')">
-    <div class="icon-shape"></div>
-    Lock
-  </button>
-  <button class="bottom-btn" onclick="fire('?Tempvar=torch')">
-    <div class="icon-shape"></div>
-    Torch
-  </button>
-  <button class="bottom-btn" onclick="fire('?Tempvar=takephoto')">
-    <div class="icon-shape"></div>
-    Selfie
-  </button>
 </div>
 
-<!-- TOAST -->
+<div class="cooldown-bar" id="cooldownBar">
+  <div class="cooldown-fill" id="cooldownFill"></div>
+</div>
+
+<!-- NAVIGATION -->
+<div class="card">
+  <div class="card-title">Navigation</div>
+  <div class="grid-3">
+    <div class="btn" data-action="?text=HOME">Home</div>
+    <div class="btn" data-action="?text=BACK">Back</div>
+    <div class="btn" data-action="?text=RECENT">Recent</div>
+  </div>
+</div>
+
+<!-- TOUCH -->
+<div class="card">
+  <div class="card-title">Touch Actions</div>
+  <div class="tabs">
+    <div class="tab active" data-tab="xy">X,Y</div>
+    <div class="tab" data-tab="text">Text</div>
+    <div class="tab" data-tab="id">View ID</div>
+    <div class="tab" data-tab="gesture">Gesture</div>
+  </div>
+
+  <div class="panel active" id="p-xy">
+    <div class="field-row">
+      <div class="field">
+        <label>X Position</label>
+        <input type="number" id="X" placeholder="500">
+      </div>
+      <div class="field">
+        <label>Y Position</label>
+        <input type="number" id="Y" placeholder="900">
+      </div>
+    </div>
+    <button class="btn primary" style="width:100%" onclick="send('?X='+v('X')+'&Y='+v('Y'))">Execute Tap</button>
+  </div>
+
+  <div class="panel" id="p-text">
+    <div class="field">
+      <label>Text Content</label>
+      <input type="text" id="txt" placeholder="Text to find & tap">
+    </div>
+    <button class="btn primary" style="width:100%" onclick="send('?text='+v('txt'))">Tap by Text</button>
+  </div>
+
+  <div class="panel" id="p-id">
+    <div class="field">
+      <label>View ID</label>
+      <input type="text" id="idval" placeholder="com.app:id/button">
+    </div>
+    <button class="btn primary" style="width:100%" onclick="send('?id='+v('idval'))">Tap by ID</button>
+  </div>
+
+  <div class="panel" id="p-gesture">
+    <div class="field-row">
+      <div class="field"><label>Start X</label><input type="number" id="SX" placeholder="SX"></div>
+      <div class="field"><label>Start Y</label><input type="number" id="SY" placeholder="SY"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>End X</label><input type="number" id="EX" placeholder="EX"></div>
+      <div class="field"><label>End Y</label><input type="number" id="EY" placeholder="EY"></div>
+    </div>
+    <button class="btn primary" style="width:100%" onclick="send('?SX='+v('SX')+'&SY='+v('SY')+'&EX='+v('EX')+'&EY='+v('EY'))">Run Gesture</button>
+  </div>
+</div>
+
+<!-- MEDIA -->
+<div class="card">
+  <div class="card-title">Media & Text</div>
+
+  <div class="field">
+    <label>Speak Text</label>
+    <input type="text" id="speak" placeholder="What to speak">
+  </div>
+  <button class="btn primary" style="width:100%;margin-bottom:12px" onclick="send('?speak='+v('speak')+'&Tempvar=speak')">Speak</button>
+
+  <div class="field">
+    <label>Toast Message</label>
+    <input type="text" id="popup" placeholder="Quick toast">
+  </div>
+  <button class="btn primary" style="width:100%;margin-bottom:12px" onclick="send('?popup='+v('popup'))">Show Toast</button>
+
+  <div class="field">
+    <label>Floating Text</label>
+    <input type="text" id="ftxt" placeholder="Overlay text">
+  </div>
+  <div class="grid-2" style="margin-bottom:12px">
+    <button class="btn primary" onclick="send('?ftext='+v('ftxt')+'&Tempvar=floaton')">Show Float</button>
+    <button class="btn" data-action="?Tempvar=floatoff">Hide Float</button>
+  </div>
+
+  <div class="field">
+    <label>Paste Text</label>
+    <input type="text" id="paste" placeholder="Text to paste">
+  </div>
+  <div class="grid-2">
+    <button class="btn primary" onclick="send('?paste='+v('paste'))">Paste</button>
+    <button class="btn" data-action="?paste=clrscr">Clear Field</button>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="card">
+  <div class="card-title">Notifications & Dialog</div>
+
+  <div class="field">
+    <label>Notification Title</label>
+    <input type="text" id="ttln" placeholder="Title">
+  </div>
+  <div class="field">
+    <label>Notification Message</label>
+    <input type="text" id="descn" placeholder="Message">
+  </div>
+  <button class="btn primary" style="width:100%;margin-bottom:14px" onclick="send('?ttl='+v('ttln')+'&msg='+v('descn')+'&Tempvar=notimessage')">Send Notification</button>
+
+  <div class="field">
+    <label>Dialog Title</label>
+    <input type="text" id="ttl" placeholder="Title">
+  </div>
+  <div class="field">
+    <label>Dialog Message</label>
+    <input type="text" id="desc" placeholder="Message">
+  </div>
+  <button class="btn primary" style="width:100%" onclick="send('?ttl='+v('ttl')+'&msg='+v('desc')+'&Tempvar=message')">Show Dialog</button>
+</div>
+
+<!-- SCREEN -->
+<div class="card">
+  <div class="card-title">Screen Control</div>
+
+  <div class="slider-wrap">
+    <div class="slider-header">
+      <label>Brightness</label>
+      <div class="slider-value" id="brtsVal">70</div>
+    </div>
+    <input type="range" id="brts" min="0" max="100" value="70" oninput="document.getElementById('brtsVal').textContent=this.value">
+  </div>
+  <button class="btn primary" style="width:100%;margin-bottom:16px" onclick="send('?brightness='+v('brts')+'&Tempvar=bright')">Set Brightness</button>
+
+  <div class="slider-wrap">
+    <div class="slider-header">
+      <label>Dim Level</label>
+      <div class="slider-value" id="dimVal">40</div>
+    </div>
+    <input type="range" id="dim" min="0" max="100" value="40" oninput="document.getElementById('dimVal').textContent=this.value">
+  </div>
+  <div class="grid-2">
+    <button class="btn primary" onclick="send('?DIM='+v('dim'))">Apply Dim</button>
+    <button class="btn" data-action="?Tempvar=dimoff">Remove Dim</button>
+  </div>
+</div>
+
+<!-- CONNECTIVITY -->
+<div class="card">
+  <div class="card-title">Connectivity</div>
+  <div class="grid-3">
+    <div class="btn" data-action="?Tempvar=wifion">WiFi On</div>
+    <div class="btn" data-action="?Tempvar=wifioff">WiFi Off</div>
+    <div class="btn" data-action="?Tempvar=torch">Torch</div>
+    <div class="btn" data-action="?Tempvar=bton">BT On</div>
+    <div class="btn" data-action="?Tempvar=btoff">BT Off</div>
+    <div class="btn" data-action="?Tempvar=takephoto">Selfie</div>
+    <div class="btn" data-action="?Tempvar=htspton">Hotspot On</div>
+    <div class="btn" data-action="?Tempvar=htsptoff">Hotspot Off</div>
+    <div class="btn" data-action="?Tempvar=fullvolume">Full Vol</div>
+  </div>
+</div>
+
+<!-- SYSTEM -->
+<div class="card">
+  <div class="card-title">System</div>
+  <div class="grid-3">
+    <div class="btn" data-action="?Tempvar=dndon">DND On</div>
+    <div class="btn" data-action="?Tempvar=dndoff">DND Off</div>
+    <div class="btn" data-action="?Tempvar=lock">Lock</div>
+    <div class="btn" data-action="?text=ENOTIBAR">Expand Noti</div>
+    <div class="btn" data-action="?text=CNOTIBAR">Collapse Noti</div>
+    <div class="btn" data-action="?Tempvar=alarm">Ring Alarm</div>
+  </div>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="btn" data-action="?Tempvar=cancel">Stop Alarm</div>
+    <div class="btn danger" onclick="openModal()">Disable MD</div>
+  </div>
+</div>
+
+<!-- VARIABLES -->
+<div class="card">
+  <div class="card-title">Variables</div>
+  <div id="simpleMode">
+    <div class="field">
+      <label>Variable Name</label>
+      <input type="text" id="varname" placeholder="myVar">
+    </div>
+    <div class="field">
+      <label>Value</label>
+      <input type="text" id="varvalue" placeholder="value">
+    </div>
+    <button class="btn primary" style="width:100%" onclick="send('?'+v('varname')+'='+v('varvalue'))">Set Variable</button>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="toggleVar(true)">Advanced Mode</button>
+  </div>
+  <div id="advancedMode" style="display:none">
+    <div class="field">
+      <label>Multi Parameters</label>
+      <input type="text" id="parameters" placeholder="a=1&b=hello&c=false">
+    </div>
+    <p style="font-size:0.73rem;color:var(--muted);margin:-2px 0 12px">Format: key=value&key2=value2</p>
+    <button class="btn primary" style="width:100%" onclick="send('?'+v('parameters'))">Send Multi Vars</button>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="toggleVar(false)">Simple Mode</button>
+  </div>
+</div>
+
+<!-- SMART COMBOS -->
+<div class="card">
+  <div class="card-title">Smart Combos</div>
+  <div class="combo-status" id="comboStatus">
+    <span class="step" id="comboStep">Step 1/2</span> — <span id="comboName">Preparing...</span>
+  </div>
+  <div class="grid-2">
+    <div class="btn" onclick="runCombo([
+      {q:'?Tempvar=dndon', name:'DND On'},
+      {q:'?Tempvar=fullvolume', name:'Full Volume'}
+    ])">Focus Mode</div>
+    <div class="btn" onclick="runCombo([
+      {q:'?Tempvar=wifioff', name:'WiFi Off'},
+      {q:'?Tempvar=btoff', name:'Bluetooth Off'},
+      {q:'?Tempvar=dndon', name:'DND On'}
+    ])">Quiet Mode</div>
+    <div class="btn" onclick="runCombo([
+      {q:'?Tempvar=wifion', name:'WiFi On'},
+      {q:'?Tempvar=bton', name:'Bluetooth On'}
+    ])">Connect All</div>
+    <div class="btn" onclick="runCombo([
+      {q:'?text=HOME', name:'Home'},
+      {q:'?Tempvar=lock', name:'Lock Screen'}
+    ])">Home + Lock</div>
+  </div>
+</div>
+
 <div class="toast" id="toast">Action sent</div>
 
-<!-- CONFIRM MODAL -->
-<div class="modal-overlay" id="confirmModal">
+<div class="modal-bg" id="modal">
   <div class="modal">
     <h3>Disable MacroDroid?</h3>
-    <p>This will disable MacroDroid completely. Are you sure?</p>
+    <p>This will completely disable MacroDroid on the device.</p>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn danger" onclick="fire('?Tempvar=DISABLEMACRODROID'); closeModal()">Disable</button>
+      <button class="btn danger" onclick="send('?Tempvar=DISABLEMACRODROID'); closeModal()">Disable</button>
     </div>
   </div>
 </div>
@@ -733,32 +672,64 @@ body {
 
 <script>
 const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook";
+const COOLDOWN = 2100; // 2.1 seconds to be safe
+let locked = false;
+let comboRunning = false;
 
 function v(id) {
   const el = document.getElementById(id);
   return el ? el.value.trim() : '';
 }
 
-function fire(query) {
-  document.getElementById('worker').src = WEBHOOK + query;
-  showToast("Action sent");
+function lockUI(duration = COOLDOWN) {
+  locked = true;
+  document.querySelectorAll('.btn').forEach(b => b.classList.add('disabled'));
+
+  const bar = document.getElementById('cooldownBar');
+  const fill = document.getElementById('cooldownFill');
+  bar.classList.add('active');
+  fill.style.width = '0%';
+
+  const start = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    fill.style.width = (progress * 100) + '%';
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      locked = false;
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('disabled'));
+      bar.classList.remove('active');
+      fill.style.width = '0%';
+    }
+  }
+  requestAnimationFrame(tick);
 }
 
-function combo(queries) {
-  queries.forEach((q, i) => {
-    setTimeout(() => {
-      document.getElementById('worker').src = WEBHOOK + q;
-    }, i * 350);
-  });
-  showToast("Combo fired (" + queries.length + ")");
+function send(query) {
+  if (locked || comboRunning) {
+    showToast("Please wait...");
+    return;
+  }
+  document.getElementById('worker').src = WEBHOOK + query;
+  showToast("Action sent");
+  lockUI();
 }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 1600);
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 1700);
 }
+
+// Simple data-action buttons
+document.querySelectorAll('[data-action]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    send(btn.getAttribute('data-action'));
+  });
+});
 
 // Tabs
 document.querySelectorAll('.tab').forEach(tab => {
@@ -770,17 +741,49 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-function toggleVarMode(advanced) {
-  document.getElementById('simpleMode').style.display = advanced ? 'none' : 'block';
-  document.getElementById('advancedMode').style.display = advanced ? 'block' : 'none';
+function toggleVar(adv) {
+  document.getElementById('simpleMode').style.display = adv ? 'none' : 'block';
+  document.getElementById('advancedMode').style.display = adv ? 'block' : 'none';
 }
 
-function confirmDisable() {
-  document.getElementById('confirmModal').classList.add('show');
+function openModal() {
+  if (locked || comboRunning) return;
+  document.getElementById('modal').classList.add('show');
 }
-
 function closeModal() {
-  document.getElementById('confirmModal').classList.remove('show');
+  document.getElementById('modal').classList.remove('show');
+}
+
+// Sequential Combo with proper delay + status
+async function runCombo(steps) {
+  if (locked || comboRunning) {
+    showToast("Please wait...");
+    return;
+  }
+  comboRunning = true;
+  const status = document.getElementById('comboStatus');
+  const stepEl = document.getElementById('comboStep');
+  const nameEl = document.getElementById('comboName');
+  status.classList.add('active');
+
+  document.querySelectorAll('.btn').forEach(b => b.classList.add('disabled'));
+
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    stepEl.textContent = `Step ${i+1}/${steps.length}`;
+    nameEl.textContent = step.name;
+
+    document.getElementById('worker').src = WEBHOOK + step.q;
+    showToast(step.name);
+
+    // Wait full cooldown between steps
+    await new Promise(r => setTimeout(r, COOLDOWN));
+  }
+
+  status.classList.remove('active');
+  comboRunning = false;
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('disabled'));
+  showToast("Combo complete");
 }
 </script>
 </body>
