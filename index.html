@@ -8,7 +8,6 @@
 :root {
   --bg: #080b14;
   --card: #101625;
-  --card-hover: #151d30;
   --border: rgba(255,255,255,0.07);
   --accent: #3b82f6;
   --accent-dim: rgba(59,130,246,0.15);
@@ -32,20 +31,30 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  padding: 16px;
-  padding-bottom: 40px;
+  padding: 0 16px 50px;
   background-image: radial-gradient(ellipse at top, rgba(59,130,246,0.06), transparent 60%);
 }
 
-/* Header */
+/* Sticky Header + Cooldown */
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,11,20,0.92);
+  backdrop-filter: blur(14px);
+  padding: 14px 0 10px;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
 .header {
   text-align: center;
-  margin-bottom: 20px;
-  padding-top: 8px;
 }
 
 .header h1 {
-  font-size: 1.45rem;
+  font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.4px;
   background: linear-gradient(90deg, #60a5fa, #a78bfa);
@@ -54,22 +63,22 @@ body {
 }
 
 .header .sub {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--muted);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .status {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
-  font-size: 0.72rem;
+  margin-top: 8px;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--green);
   background: rgba(34,197,94,0.1);
   border: 1px solid rgba(34,197,94,0.2);
-  padding: 4px 12px;
+  padding: 3px 11px;
   border-radius: 99px;
 }
 
@@ -86,12 +95,11 @@ body {
   50% { opacity:0.35; }
 }
 
-/* Cooldown bar */
 .cooldown-bar {
   height: 3px;
-  background: var(--border);
+  background: rgba(255,255,255,0.06);
   border-radius: 99px;
-  margin: 12px 0 18px;
+  margin-top: 12px;
   overflow: hidden;
   opacity: 0;
   transition: opacity 0.2s;
@@ -106,7 +114,6 @@ body {
   width: 0%;
   background: linear-gradient(90deg, var(--accent), var(--purple));
   border-radius: 99px;
-  transition: width 0.05s linear;
 }
 
 /* Cards */
@@ -115,11 +122,11 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
-  margin-bottom: 14px;
+  margin-top: 14px;
 }
 
 .card-title {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
@@ -196,7 +203,7 @@ body {
 
 .field label {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--muted);
   margin-bottom: 5px;
@@ -214,7 +221,6 @@ body {
   color: var(--text);
   font-size: 0.92rem;
   outline: none;
-  transition: border 0.2s;
 }
 
 .field input:focus {
@@ -240,7 +246,7 @@ body {
 }
 
 .slider-header label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
@@ -248,7 +254,7 @@ body {
 }
 
 .slider-value {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 700;
   color: var(--accent);
   background: var(--accent-dim);
@@ -292,7 +298,7 @@ input[type="range"]::-webkit-slider-thumb {
   flex: 1;
   text-align: center;
   padding: 9px 4px;
-  font-size: 0.74rem;
+  font-size: 0.73rem;
   font-weight: 600;
   color: var(--muted);
   border-radius: 9px;
@@ -308,7 +314,6 @@ input[type="range"]::-webkit-slider-thumb {
 .panel { display: none; }
 .panel.active { display: block; }
 
-/* Divider */
 .divider {
   height: 1px;
   background: var(--border);
@@ -342,12 +347,91 @@ input[type="range"]::-webkit-slider-thumb {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Combo status */
+/* Gesture Canvas */
+.canvas-wrap {
+  position: relative;
+  background: #0c1220;
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  touch-action: none;
+}
+
+#gestureCanvas {
+  width: 100%;
+  height: 220px;
+  display: block;
+  cursor: crosshair;
+}
+
+.canvas-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.canvas-hint.hidden {
+  opacity: 0;
+}
+
+/* Gesture List */
+.gesture-list {
+  margin-top: 12px;
+}
+
+.gesture-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #182033;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+}
+
+.gesture-item .info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gesture-item .name {
+  font-weight: 600;
+}
+
+.gesture-item .meta {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.gesture-item .remove {
+  background: rgba(239,68,68,0.12);
+  border: none;
+  color: #f87171;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .combo-status {
   background: rgba(59,130,246,0.1);
   border: 1px solid rgba(59,130,246,0.25);
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 11px 14px;
   margin-bottom: 12px;
   font-size: 0.82rem;
   display: none;
@@ -406,17 +490,18 @@ input[type="range"]::-webkit-slider-thumb {
 </head>
 <body>
 
-<div class="header">
-  <h1>MacroDroid Controller</h1>
-  <div class="sub">Remote Device Control</div>
-  <div class="status">
-    <div class="status-dot"></div>
-    Webhook Ready
+<div class="sticky-top">
+  <div class="header">
+    <h1>MacroDroid Controller</h1>
+    <div class="sub">Remote Device Control</div>
+    <div class="status">
+      <div class="status-dot"></div>
+      Webhook Ready
+    </div>
   </div>
-</div>
-
-<div class="cooldown-bar" id="cooldownBar">
-  <div class="cooldown-fill" id="cooldownFill"></div>
+  <div class="cooldown-bar" id="cooldownBar">
+    <div class="cooldown-fill" id="cooldownFill"></div>
+  </div>
 </div>
 
 <!-- NAVIGATION -->
@@ -479,6 +564,34 @@ input[type="range"]::-webkit-slider-thumb {
       <div class="field"><label>End Y</label><input type="number" id="EY" placeholder="EY"></div>
     </div>
     <button class="btn primary" style="width:100%" onclick="send('?SX='+v('SX')+'&SY='+v('SY')+'&EX='+v('EX')+'&EY='+v('EY'))">Run Gesture</button>
+  </div>
+</div>
+
+<!-- MULTI GESTURE RECORDER (NEW) -->
+<div class="card">
+  <div class="card-title">Multi Gesture Studio</div>
+
+  <div class="combo-status" id="comboStatus">
+    <span class="step" id="comboStep">Step 1/1</span> — <span id="comboName">Preparing...</span>
+  </div>
+
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="gestureCanvas"></canvas>
+    <div class="canvas-hint" id="canvasHint">Draw a gesture here with your finger</div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:12px">
+    <button class="btn" id="clearCanvasBtn">Clear Pad</button>
+    <button class="btn primary" id="addGestureBtn">Add to Sequence</button>
+  </div>
+
+  <div class="gesture-list" id="gestureList">
+    <!-- dynamic items -->
+  </div>
+
+  <div class="grid-2" style="margin-top:10px">
+    <button class="btn" id="clearSequenceBtn">Clear All</button>
+    <button class="btn primary" id="playSequenceBtn">Execute Sequence</button>
   </div>
 </div>
 
@@ -628,33 +741,6 @@ input[type="range"]::-webkit-slider-thumb {
   </div>
 </div>
 
-<!-- SMART COMBOS -->
-<div class="card">
-  <div class="card-title">Smart Combos</div>
-  <div class="combo-status" id="comboStatus">
-    <span class="step" id="comboStep">Step 1/2</span> — <span id="comboName">Preparing...</span>
-  </div>
-  <div class="grid-2">
-    <div class="btn" onclick="runCombo([
-      {q:'?Tempvar=dndon', name:'DND On'},
-      {q:'?Tempvar=fullvolume', name:'Full Volume'}
-    ])">Focus Mode</div>
-    <div class="btn" onclick="runCombo([
-      {q:'?Tempvar=wifioff', name:'WiFi Off'},
-      {q:'?Tempvar=btoff', name:'Bluetooth Off'},
-      {q:'?Tempvar=dndon', name:'DND On'}
-    ])">Quiet Mode</div>
-    <div class="btn" onclick="runCombo([
-      {q:'?Tempvar=wifion', name:'WiFi On'},
-      {q:'?Tempvar=bton', name:'Bluetooth On'}
-    ])">Connect All</div>
-    <div class="btn" onclick="runCombo([
-      {q:'?text=HOME', name:'Home'},
-      {q:'?Tempvar=lock', name:'Lock Screen'}
-    ])">Home + Lock</div>
-  </div>
-</div>
-
 <div class="toast" id="toast">Action sent</div>
 
 <div class="modal-bg" id="modal">
@@ -672,10 +758,11 @@ input[type="range"]::-webkit-slider-thumb {
 
 <script>
 const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook";
-const COOLDOWN = 2100; // 2.1 seconds to be safe
+const COOLDOWN = 2100;
 let locked = false;
 let comboRunning = false;
 
+// ========== CORE ==========
 function v(id) {
   const el = document.getElementById(id);
   return el ? el.value.trim() : '';
@@ -698,7 +785,9 @@ function lockUI(duration = COOLDOWN) {
       requestAnimationFrame(tick);
     } else {
       locked = false;
-      document.querySelectorAll('.btn').forEach(b => b.classList.remove('disabled'));
+      if (!comboRunning) {
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('disabled'));
+      }
       bar.classList.remove('active');
       fill.style.width = '0%';
     }
@@ -724,11 +813,9 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 1700);
 }
 
-// Simple data-action buttons
+// data-action buttons
 document.querySelectorAll('[data-action]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    send(btn.getAttribute('data-action'));
-  });
+  btn.addEventListener('click', () => send(btn.getAttribute('data-action')));
 });
 
 // Tabs
@@ -754,37 +841,215 @@ function closeModal() {
   document.getElementById('modal').classList.remove('show');
 }
 
-// Sequential Combo with proper delay + status
-async function runCombo(steps) {
+// ========== GESTURE RECORDER ==========
+const canvas = document.getElementById('gestureCanvas');
+const ctx = canvas.getContext('2d');
+const hint = document.getElementById('canvasHint');
+let drawing = false;
+let currentPath = [];
+let gestureSequence = []; // array of paths
+let screenW = 1080; // assume, user can change later
+let screenH = 2400;
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = 220 * 2;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = '220px';
+  ctx.scale(2, 2);
+  redraw();
+}
+
+function redraw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (currentPath.length < 2) return;
+  ctx.beginPath();
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.moveTo(currentPath[0].x, currentPath[0].y);
+  for (let i = 1; i < currentPath.length; i++) {
+    ctx.lineTo(currentPath[i].x, currentPath[i].y);
+  }
+  ctx.stroke();
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches ? e.touches[0] : e;
+  return {
+    x: touch.clientX - rect.left,
+    y: touch.clientY - rect.top
+  };
+}
+
+function startDraw(e) {
+  e.preventDefault();
+  drawing = true;
+  currentPath = [];
+  hint.classList.add('hidden');
+  const pos = getPos(e);
+  currentPath.push(pos);
+}
+
+function moveDraw(e) {
+  if (!drawing) return;
+  e.preventDefault();
+  const pos = getPos(e);
+  currentPath.push(pos);
+  redraw();
+}
+
+function endDraw(e) {
+  if (!drawing) return;
+  drawing = false;
+  e.preventDefault();
+}
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', moveDraw);
+canvas.addEventListener('mouseup', endDraw);
+canvas.addEventListener('mouseleave', endDraw);
+canvas.addEventListener('touchstart', startDraw, {passive:false});
+canvas.addEventListener('touchmove', moveDraw, {passive:false});
+canvas.addEventListener('touchend', endDraw);
+
+document.getElementById('clearCanvasBtn').addEventListener('click', () => {
+  currentPath = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  hint.classList.remove('hidden');
+});
+
+document.getElementById('addGestureBtn').addEventListener('click', () => {
+  if (currentPath.length < 5) {
+    showToast("Draw a longer gesture first");
+    return;
+  }
+  // Convert canvas coords to approximate screen coords (normalized 0-1000)
+  const canvasW = canvas.clientWidth;
+  const canvasH = canvas.clientHeight;
+
+  const points = currentPath.map(p => ({
+    x: Math.round((p.x / canvasW) * 1000),
+    y: Math.round((p.y / canvasH) * 1000)
+  }));
+
+  // Simplify path: keep start, some middle points, end (for MacroDroid we use start→end segments)
+  const simplified = simplifyPath(points, 6);
+
+  gestureSequence.push({
+    points: simplified,
+    name: `Gesture ${gestureSequence.length + 1}`
+  });
+
+  renderGestureList();
+  currentPath = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  hint.classList.remove('hidden');
+  showToast("Gesture added");
+});
+
+function simplifyPath(points, maxPoints) {
+  if (points.length <= maxPoints) return points;
+  const step = (points.length - 1) / (maxPoints - 1);
+  const result = [];
+  for (let i = 0; i < maxPoints; i++) {
+    result.push(points[Math.round(i * step)]);
+  }
+  return result;
+}
+
+function renderGestureList() {
+  const list = document.getElementById('gestureList');
+  list.innerHTML = '';
+  gestureSequence.forEach((g, idx) => {
+    const el = document.createElement('div');
+    el.className = 'gesture-item';
+    el.innerHTML = `
+      <div class="info">
+        <div class="name">${g.name}</div>
+        <div class="meta">${g.points.length} points</div>
+      </div>
+      <button class="remove" data-idx="${idx}">×</button>
+    `;
+    list.appendChild(el);
+  });
+
+  list.querySelectorAll('.remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.idx);
+      gestureSequence.splice(i, 1);
+      // rename
+      gestureSequence.forEach((g, i) => g.name = `Gesture ${i+1}`);
+      renderGestureList();
+    });
+  });
+}
+
+document.getElementById('clearSequenceBtn').addEventListener('click', () => {
+  gestureSequence = [];
+  renderGestureList();
+  showToast("Sequence cleared");
+});
+
+// Play sequence: for each gesture, send consecutive point pairs as swipe gestures
+async function playSequence() {
   if (locked || comboRunning) {
     showToast("Please wait...");
     return;
   }
+  if (gestureSequence.length === 0) {
+    showToast("Add gestures first");
+    return;
+  }
+
   comboRunning = true;
   const status = document.getElementById('comboStatus');
   const stepEl = document.getElementById('comboStep');
   const nameEl = document.getElementById('comboName');
   status.classList.add('active');
-
   document.querySelectorAll('.btn').forEach(b => b.classList.add('disabled'));
 
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i];
-    stepEl.textContent = `Step ${i+1}/${steps.length}`;
-    nameEl.textContent = step.name;
+  let totalSteps = 0;
+  gestureSequence.forEach(g => totalSteps += Math.max(1, g.points.length - 1));
+  let currentStep = 0;
 
-    document.getElementById('worker').src = WEBHOOK + step.q;
-    showToast(step.name);
+  for (let g = 0; g < gestureSequence.length; g++) {
+    const gesture = gestureSequence[g];
+    const pts = gesture.points;
 
-    // Wait full cooldown between steps
-    await new Promise(r => setTimeout(r, COOLDOWN));
+    if (pts.length < 2) continue;
+
+    for (let i = 0; i < pts.length - 1; i++) {
+      currentStep++;
+      const from = pts[i];
+      const to = pts[i + 1];
+
+      stepEl.textContent = `Step ${currentStep}/${totalSteps}`;
+      nameEl.textContent = `${gesture.name} (${i+1}/${pts.length-1})`;
+
+      // Send as MacroDroid gesture
+      const q = `?SX=${from.x}&SY=${from.y}&EX=${to.x}&EY=${to.y}`;
+      document.getElementById('worker').src = WEBHOOK + q;
+      showToast(`${gesture.name} segment ${i+1}`);
+
+      await new Promise(r => setTimeout(r, COOLDOWN));
+    }
   }
 
   status.classList.remove('active');
   comboRunning = false;
   document.querySelectorAll('.btn').forEach(b => b.classList.remove('disabled'));
-  showToast("Combo complete");
+  showToast("Sequence complete");
 }
+
+document.getElementById('playSequenceBtn').addEventListener('click', playSequence);
+
+// Init canvas
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 </script>
 </body>
 </html>
