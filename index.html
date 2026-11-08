@@ -585,6 +585,7 @@ input[type="range"]::-webkit-slider-thumb {
     <div class="field"><label>Chain mode (fast, no Shizuku)</label><input type="checkbox" id="contMode" checked style="width:24px;height:24px"></div>
     <div class="field"><label>Points per stroke</label><input type="number" id="maxPts" value="30"></div>
   </div>
+  <div class="field"><label>Smooth mode (no finger lift)</label><input type="checkbox" id="smooth" checked style="width:24px;height:24px"></div>
   <div class="field"><label>Time per point ms</label><input type="number" id="msPt" value="250"></div>
   <div class="ptabs" id="platTabs"></div>
   <div class="combo-status" id="comboStatus"><span class="step" id="comboStep"></span> on <span id="comboName"></span></div>
@@ -869,7 +870,7 @@ function rdp(p,e){if(p.length<3)return p;let m=0,k=0;const a=p[0],b=p[p.length-1
   for(let i=1;i<p.length-1;i++){const d=dist(p[i],a,b);if(d>m){m=d;k=i}}
   return m>e?rdp(p.slice(0,k+1),e).slice(0,-1).concat(rdp(p.slice(k),e)):[a,b]}
 function simp(s){const W=SW(),H=SH(),M=Math.max(1,num('maxSeg',8));
-  const M2=$('contMode').checked?Math.max(2,num('maxPts',30))-1:M;const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=4,r=rdp(p,e);
+  const M2=($('contMode').checked||$('smooth').checked)?Math.max(2,num('maxPts',30))-1:M;const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=4,r=rdp(p,e);
   while(r.length-1>M2&&e<3000){e*=1.4;r=rdp(p,e)}
   return r.map(q=>({x:Math.max(1,Math.round(q.x)),y:Math.max(1,Math.round(q.y))}))}
 
@@ -878,6 +879,7 @@ function steps(i){const out=[];
   P[i].s.forEach(s=>{const p=simp(s);let len=0;
     for(let k=1;k<p.length;k++)len+=Math.hypot(p[k].x-p[k-1].x,p[k].y-p[k-1].y);
     if(len<20){out.push(`?X=${p[0].x}&Y=${p[0].y}`);return}
+    if($('smooth').checked){const u=p.filter((q,j)=>!j||q.x!=p[j-1].x||q.y!=p[j-1].y),sd=Math.max(150,Math.min(8000,Math.round(s[s.length-1].t-s[0].t)||Math.round(len*1.2)));out.push('?Tempvar=gesture&path='+u.map(q=>q.x+','+q.y).join(';')+'&dur='+sd);return}
     if($('contMode').checked){const u=p.filter((q,j)=>!j||q.x!=p[j-1].x||q.y!=p[j-1].y);
       for(let c=0;c<u.length-1;c+=15)out.push('?'+u.slice(c,c+16).map((q,j)=>`PX${j}=${q.x}&PY${j}=${q.y}`).join('&'));return}
     for(let k=1;k<p.length;k++){const a=p[k-1],b=p[k];
@@ -904,7 +906,7 @@ function tabs(){const t=$('platTabs');t.innerHTML='';
     d.onclick=()=>{if(comboRunning)return;cur=i;refresh()};t.appendChild(d)});
   const a=document.createElement('div');a.className='ptab';a.textContent='+ Add platform';
   a.onclick=()=>{if(comboRunning)return;P.push({s:[],w:2000});cur=P.length-1;refresh()};t.appendChild(a)}
-const ptT=q=>q.startsWith('?PX0=')?(q.split('&').length/2-1)*num('msPt',250):0;
+const ptT=q=>q.startsWith('?Tempvar=gesture')?+q.split('dur=')[1]:q.startsWith('?PX0=')?(q.split('&').length/2-1)*num('msPt',250):0;
 function info(){let m=0,t=0;const g=Math.max(2100,num('gapMs',2800));
   P.forEach((p,i)=>{const st=steps(i);m+=st.length;t+=st.reduce((a,q)=>a+g+ptT(q),0)+(st.length?p.w:0)});
   $('seqInfo').textContent=`${m} moves in total, about ${Math.round(t/1000)} seconds`}
@@ -912,7 +914,7 @@ function refresh(){$('platWait').value=P[cur].w;tabs();draw();info();save()}
 
 // Drawing (mouse + touch)
 const pt=e=>{const r=cv.getBoundingClientRect();
-  return{x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}};
+  return{t:e.timeStamp,x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}};
 cv.onpointerdown=e=>{if(comboRunning)return;e.preventDefault();cv.setPointerCapture(e.pointerId);drawing=[pt(e)];draw()};
 cv.onpointermove=e=>{if(drawing){drawing.push(pt(e));draw()}};
 cv.onpointerup=cv.onpointercancel=()=>{if(drawing){P[cur].s.push(drawing);drawing=null;refresh()}};
@@ -949,12 +951,37 @@ async function exec(ids){
   document.querySelectorAll('.btn').forEach(b=>b.classList.remove('disabled'));
   showToast(stopReq?'Stopped':'Sequence complete')}
 
-const CMDS=[["playpause", "Play/Pause", "Media", 0], ["play", "Play", "Media", 0], ["pause", "Pause", "Media", 0], ["volup", "Volume +", "Media", 0], ["voldown", "Volume -", "Media", 0], ["volpopup", "Volume bar", "Media", 0], ["screenon", "Screen on", "Screen", 0], ["screenoff", "Screen off", "Screen", 0], ["rotateon", "Rotate on", "Screen", 0], ["rotateoff", "Rotate off", "Screen", 0], ["awakeon", "Keep awake on", "Screen", 0], ["awakeoff", "Keep awake off", "Screen", 0], ["daydream", "Screensaver", "Screen", 0], ["rearphoto", "Rear photo", "Camera and light", 0], ["torchon", "Torch on", "Camera and light", 0], ["torchoff", "Torch off", "Camera and light", 0], ["vibA", "Vibrate A", "Device", 0], ["vibB", "Vibrate B", "Device", 0], ["edgelight", "Edge light", "Device", 0], ["clearnoti", "Clear notifications", "Device", 0], ["opensettings", "Open Settings", "Device", 0], ["saytime", "Say time", "Speak", 0], ["saybattery", "Say battery", "Speak", 0], ["openurl", "Open website", "Run with input", "https://..."], ["launchapp", "Launch app (package)", "Run with input", "com.whatsapp"], ["setclip", "Set clipboard", "Run with input", "text to copy"], ["runmacro", "Run any macro by name", "Run with input", "exact macro name"]];
-(function(){const root=$('more');let g='',box;
-CMDS.forEach(([k,l,gr,p])=>{if(gr!=g){g=gr;const t=document.createElement('div');t.className='card-title';t.style.margin='14px 0 8px';t.textContent=gr;root.appendChild(t);box=document.createElement('div');box.className='grid-3';root.appendChild(box)}
- if(!p){const b=document.createElement('div');b.className='btn';b.textContent=l;b.onclick=()=>send('?Tempvar='+k);box.appendChild(b)}
- else{const w=document.createElement('div');w.style.cssText='grid-column:1/-1';w.innerHTML=`<div class="field"><label>${l}</label><input type="text" placeholder="${p}"${k=='runmacro'?' list="macs"':''}></div>`;
-  const b=document.createElement('div');b.className='btn primary';b.textContent=l;b.onclick=()=>{const v=w.querySelector('input').value.trim();if(v)send('?Tempvar='+k+'&p1='+encodeURIComponent(v))};w.appendChild(b);box.appendChild(w)}})})();
+const SIMPLE=[["volup", "Volume +", "Volume"], ["voldown", "Volume -", "Volume"], ["screenon", "Screen on", "Screen"], ["screenoff", "Screen off", "Screen"], ["rotateon", "Rotate on", "Screen"], ["rotateoff", "Rotate off", "Screen"], ["awakeon", "Keep awake on", "Screen"], ["awakeoff", "Keep awake off", "Screen"], ["rearphoto", "Rear photo", "Camera and light"], ["torchon", "Torch on", "Camera and light"], ["torchoff", "Torch off", "Camera and light"], ["vibA", "Vibrate 1", "Device"], ["vibB", "Vibrate 2", "Device"], ["vibC", "Vibrate 3", "Device"], ["vibD", "Vibrate 4", "Device"], ["edgelight", "Edge light", "Device"], ["clearnoti", "Clear notifications", "Device"], ["saytime", "Say time", "Speak"], ["saybattery", "Say battery", "Speak"], ["rejectcall", "Reject call", "Phone"], ["blockon", "Block touches", "Screen"], ["blockoff", "Unblock touches", "Screen"]],APPS=[["wa", "WhatsApp", "whatsapp whatsapp watsapp whatsap wa"], ["wab", "WhatsApp Business", "whatsapp business business wab"], ["ig", "Instagram", "instagram insta ig"], ["fb", "Facebook", "facebook fb"], ["msgr", "Messenger", "messenger messenger"], ["yt", "YouTube", "youtube youtube"], ["ytr", "YouTube ReVanced", "youtube revanced revanced vanced"], ["ytm", "YouTube Music", "youtube music ytmusic"], ["chrome", "Chrome", "chrome "], ["brave", "Brave", "brave brave browser"], ["ff", "Firefox", "firefox "], ["spotify", "Spotify", "spotify "], ["tg", "Telegram", "telegram tele"], ["snap", "Snapchat", "snapchat snap"], ["x", "X", "x twitter"], ["reddit", "Reddit", "reddit "], ["pin", "Pinterest", "pinterest "], ["li", "LinkedIn", "linkedin linkedin"], ["dc", "Discord", "discord "], ["gmail", "Gmail", "gmail mail email"], ["maps", "Google Maps", "google maps maps map"], ["play", "Play Store", "play store playstore store"], ["photos", "Google Photos", "google photos photos gallery"], ["drive", "Google Drive", "google drive drive"], ["google", "Google", "google search"], ["meet", "Google Meet", "google meet meet"], ["zoom", "Zoom", "zoom "], ["teams", "Microsoft Teams", "microsoft teams teams"], ["netflix", "Netflix", "netflix "], ["prime", "Prime Video", "prime video amazon prime"], ["amazon", "Amazon", "amazon shopping"], ["flipkart", "Flipkart", "flipkart "], ["phonepe", "PhonePe", "phonepe "], ["gpay", "Google Pay", "google pay gpay tez"], ["paytm", "Paytm", "paytm "], ["truecaller", "Truecaller", "truecaller "], ["settings", "Settings", "settings setting"], ["macrodroid", "MacroDroid", "macrodroid macro droid"], ["freefire", "Free Fire", "free fire freefire garena"], ["mx", "MX Player", "mx player mx"], ["heytap", "Music (native)", "music (native) music native heytap"], ["lastwave", "LastWave", "lastwave last wave"], ["shizuku", "Shizuku", "shizuku "]],PL=[["heytap", "Music (native)"], ["lastwave", "LastWave"], ["mx", "MX Player"], ["ytr", "YouTube ReVanced"], ["yt", "YouTube"], ["ytm", "YouTube Music"], ["spotify", "Spotify"], ["saavn", "JioSaavn"]],MACS=["♾️ Infinite Clipboard 📋", "Music temporarily paused 🔇", "Volume buttons = Camera 📷", "Dash notification tile controller", "Max charging speed", "Auto", "Internet 5g changer", "🔍 Search Page For Text 📃", "Ani torch", "Rapird", "NO Instagram Scrolling V1", "Restore dim", "Private DNS Quick Setting", "Pause music", "Clear notification", "Generate View", "🎱 Pool Shark (Billiards game) 🦈", "Prevent from unknown action", "FAHHHHH", "Chrome ani", "Red widget", "Take selfie via sms", "Leave me to complete my charge", "Edge light controller", "Temp maintenance warning", "🏃 Run Macros with Voice Commands 🗣️", "Torch light v1.0", "Advanced Instagram Downloader Public V1.0", "Smart torch \" on \" dim light .", "Shake Torch", "Get macro list new", "VÈ", "Restore to normal - of prevent", "Look up my macros", "4G Changer", "Bt device connected to Spotify or etc (AUTO)", "💾 Floating Ram/Temp🌡", "Clipboard Manager ✌🏻", "Amination  camera", "Full charge attention", "Force TO CHARGE PHONE Fix", "Volume change when you do work with song", "Animination headphone", "🏓 Pong Classic ✨️v2", "Ani whatsapp", "Y", "Unlock animation", "Intruder Photo + Fake Shutdown", "🪙 Coin Flipper 🐬", "H", "FloatingTextVarChange(search page for text)", "shake to torch", "Animation music player", "No Swiping 🚫👆🚫", "🛡️Theft protection🛡️", "Take rear pic via sms", "Lock your device by sms from any no.", "Prevent 2", "Find your phone by location/sound", "Notification edge style", "Instagram Downloader ⛔ V2", "Flip and lock", "🔋 Bypass Battery - Pass_Through (Updated)", "App Guardian 🛡️", "Viewpoints personal", "Folder picker", "Helper in play music", "V2", "Google Assistant", "Mobile Guard - Updated", "Count charging time", "M", "Ff", "Dash notification", "🏓 Pong Classic ✨️", "Temperature shown by  swipe top left", "Clear Dictionary", "Pin/Unpin Selection", "Extra dim v2", "No tap : Bend & Control 🔀", "Clipboard Manager 📜", "Find closest match (array)"];
+const nz=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
+function lev(a,b){const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]==b[j-1]?0:1));p=t}}return d[b.length]}
+function best(q,items){q=nz(q);let r=null,bs=9;items.forEach(([id,name,al])=>{(al||name).toLowerCase().split(/\s+/).concat([nz(name)]).forEach(w=>{w=nz(w);if(!w)return;const s=(w.includes(q)||q.includes(w))&&q.length>=3?0.1*Math.abs(w.length-q.length)/w.length:lev(q,w)/Math.max(q.length,w.length);if(s<bs){bs=s;r=[id,name]}})});return bs<=.45?r:null}
+const E=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+(function(){const root=$('more');
+const title=t=>{const e=E('div','card-title',t);e.style.margin='16px 0 8px';root.appendChild(e)};
+const grid=()=>{const g=E('div','grid-3');root.appendChild(g);return g};
+const inp=(ph,l,list)=>{const f=E('div','field');f.innerHTML='<label>'+l+'</label><input type="text" placeholder="'+ph+'"'+(list?' list="macs"':'')+'>';root.appendChild(f);return f.querySelector('input')};
+const btn=(par,t,fn,c)=>{const b=E('div','btn'+(c?' '+c:''),t);b.onclick=fn;par.appendChild(b);return b};
+const enc=encodeURIComponent;
+title('Apps (type any name, typos are fine)');const ai=inp('whatsap, insta, yt music...','App name');
+btn(root,'Open app',()=>{const v=ai.value.trim();if(!v)return;if(v.includes('.')&&!v.includes(' ')){send('?Tempvar=launchpkg&p1='+enc(v));return}const r=best(v,APPS);if(!r){showToast('No app like "'+v+'"');return}showToast('Opening '+r[1]);send('?Tempvar=app_'+r[0])},'primary');
+title('Media');const pg=E('div','field');pg.innerHTML='<label>Player</label><select id="pl" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px">'+PL.map(p=>'<option value="'+p[0]+'">'+p[1]+'</option>').join('')+'</select>';root.appendChild(pg);
+let g=grid();[['Play/Pause','pp'],['Play','play'],['Pause','pause']].forEach(([l,k])=>btn(g,l,()=>send('?Tempvar=m_'+$('pl').value+'_'+k)));btn(g,'Pause all',()=>send('?Tempvar=pauseall'),'danger');
+title('Volume');[['Media','setvol_media','vol'],['Ring','setvol_ring','rvol'],['Alarm','setvol_alarm','avol']].forEach(([l,k,vn])=>{const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">50</div></div><input type="range" min="0" max="100" value="50">';const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>v.textContent=r.value;r.onchange=()=>send('?Tempvar='+k+'&'+vn+'='+r.value);root.appendChild(w)});
+g=grid();btn(g,'Volume +',()=>send('?Tempvar=volup'));btn(g,'Volume -',()=>send('?Tempvar=voldown'));
+title('WhatsApp');const wn=inp('919876543210 (country code, no +)','Number'),wm=inp('Message','Message');g=E('div','grid-2');root.appendChild(g);
+btn(g,'Open chat',()=>send('?Tempvar=wa_open&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)));btn(g,'Send now',()=>send('?Tempvar=wa_send&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)),'primary');
+title('Phone');const pn=inp('Number','Number or SMS text');g=E('div','grid-3');root.appendChild(g);
+btn(g,'Open dialer',()=>send('?Tempvar=opendialer&p1='+enc(pn.value)));btn(g,'SMS draft',()=>send('?Tempvar=opensms&p1='+enc(pn.value)+'&p2='+enc(wm.value)));btn(g,'Reject call',()=>send('?Tempvar=rejectcall'),'danger');
+title('Touch lock');let on=false;const tb=btn(root,'Block touches: OFF',()=>{on=!on;tb.textContent='Block touches: '+(on?'ON':'OFF');send('?Tempvar='+(on?'blockon':'blockoff'))},'primary');
+title('Run a macro (typos are fine)');const mi=inp('macro name','Macro');
+btn(root,'Run macro',()=>{const v=mi.value.trim();if(!v)return;const r=best(v,MACS.map(n=>[n,n,'']))||[v,v];showToast('Running '+r[1]);send('?Tempvar=runmacro&p1='+enc(r[1]))},'primary');
+title('Web and clipboard');const ui=inp('https://...','Website or text');g=E('div','grid-2');root.appendChild(g);
+btn(g,'Open website',()=>send('?Tempvar=openurl&p1='+enc(ui.value)));btn(g,'Set clipboard',()=>send('?Tempvar=setclip&p1='+enc(ui.value)));
+title('Quick access');g=grid();[['Quick settings',5],['Power menu',6],['Notifications',4],['Recents',3],['Lock screen',8],['Screenshot (system)',9]].forEach(([l,n])=>btn(g,l,()=>send('?Tempvar=global&ga='+n)));btn(g,'Screenshot',()=>send('?Tempvar=ss'));
+title('Location');g=grid();btn(g,'Update location',()=>send('?Tempvar=updateloc'));const le=inp('you@gmail.com','Share location to (email)');btn(root,'Update and share location',()=>{if(le.value.trim())send('?Tempvar=shareloc&p1='+enc(le.value.trim()))},'primary');
+title('Record');g=grid();[15,30,60,120].forEach(n=>btn(g,'Mic '+n+'s',()=>send('?Tempvar=recmic'+n)));btn(g,'Video (macro "Rec Video")',()=>send('?Tempvar=runmacro&p1='+enc('Rec Video')));
+let gr='';SIMPLE.forEach(([k,l,c])=>{if(['Volume','Phone'].includes(c)&&1)return;if(c!=gr){gr=c;title(c);g=grid()}btn(g,l,()=>send('?Tempvar='+k))});
+})();
 window.addEventListener('resize',fit);
 fit();refresh();
 </script>
