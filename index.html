@@ -968,6 +968,7 @@ title('Apps (type any name, typos are fine)');const ai=inp('whatsap, insta, yt m
 btn(root,'Open app',()=>{const v=ai.value.trim();if(!v)return;const r=best(v,APPS);if(!r){showToast('Searching "'+v+'"');send('?Tempvar=launchname&p1='+enc(v));return}showToast('Opening '+r[1]);send('?Tempvar=app_'+r[0])},'primary');
 title('Media');const pg=E('div','field');pg.innerHTML='<label>Player</label><select id="pl" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px">'+PL.map(p=>'<option value="'+p[0]+'">'+p[1]+'</option>').join('')+'</select>';root.appendChild(pg);
 let g=grid();btn(g,'Previous',()=>send('?Tempvar=mediakey&mk=88'));btn(g,'Next',()=>send('?Tempvar=mediakey&mk=87'));btn(g,'Stop',()=>send('?Tempvar=mediakey&mk=86'));[['Play/Pause','pp',85],['Play','play',126],['Pause','pause',127]].forEach(([l,k,c])=>btn(g,l,()=>{const p=$('pl').value;send(p=='uni'?'?Tempvar=mediakey&mk='+c:'?Tempvar=m_'+p+'_'+k)}));
+g=grid();btn(g,'« 10s',()=>send('?Tempvar=seekbwd'));btn(g,'10s »',()=>send('?Tempvar=seekfwd'));
 title('Play audio by name');const au=inp('song name','Audio file name');g=E('div','grid-2');root.appendChild(g);btn(g,'Play',()=>{if(au.value.trim())send('?Tempvar=playaudio&p1='+enc(au.value.trim()))},'primary');btn(g,'Stop',()=>send('?Tempvar=stopaudio'),'danger');
 title('Volume');[['Media','setvol_media','vol'],['Ring','setvol_ring','rvol'],['Alarm','setvol_alarm','avol']].forEach(([l,k,vn])=>{const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">50</div></div><input type="range" min="0" max="100" value="50">';const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>v.textContent=r.value;r.onchange=()=>send('?Tempvar='+k+'&'+vn+'='+r.value);root.appendChild(w)});
 g=grid();btn(g,'Volume +',()=>send('?Tempvar=volup'));btn(g,'Volume -',()=>send('?Tempvar=voldown'));
@@ -988,7 +989,18 @@ const rc=document.createElement('input');rc.type='color';rc.value='#ff2d55';rc.s
 const rcRow=E('div','grid-2');root.appendChild(rcRow);rcRow.appendChild(rc);
 const ringSend=cmd=>{if(!WEBHOOK2){showToast('Set WEBHOOK2 in the page source first');return}$('worker').src=WEBHOOK2+cmd+'&ts='+Date.now();};
 btn(rcRow,'Hide ring',()=>ringSend('?Tempvar=hide'),'danger');
-btn(root,'Show ring (selected colour)',()=>ringSend('?Tempvar=show&p1='+rc.value.replace('#','')),'primary');
+const ringSliders={h:50,v:29,w:34,ht:33,th:6,fe:0,al:100};
+['Horizontal %','Vertical %','Width','Height','Thickness','Feather %','Opacity %'].forEach((l,idx)=>{
+  const key=['h','v','w','ht','th','fe','al'][idx],max=[100,100,100,100,30,100,100][idx];
+  const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">'+ringSliders[key]+'</div></div><input type="range" min="0" max="'+max+'" value="'+ringSliders[key]+'">';
+  const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>{v.textContent=r.value;ringSliders[key]=+r.value};root.appendChild(w);
+});
+const ringProg=inp('0-100','Progress value (progress-ring mode)');
+const ringDraw=E('div','field');ringDraw.innerHTML='<label>Show over lock screen / other apps</label><input type="checkbox" id="ringDrawChk" style="width:24px;height:24px">';root.appendChild(ringDraw);
+let g2=E('div','grid-2');root.appendChild(g2);
+const ringQS=()=>'&p1='+rc.value.replace('#','')+'&h='+ringSliders.h+'&v='+ringSliders.v+'&w='+ringSliders.w+'&ht='+ringSliders.ht+'&th='+ringSliders.th+'&fe='+ringSliders.fe+'&al='+(ringSliders.al/100)+'&to=10&draw='+($('ringDrawChk').checked?'true':'false');
+btn(g2,'Show ring',()=>ringSend('?Tempvar=show'+ringQS()),'primary');
+btn(g2,'Show as progress ring',()=>{if(!ringProg.value.trim()){showToast('Enter a progress value 0-100');return}ringSend('?Tempvar=showprogress'+ringQS()+'&prog='+ringProg.value.trim())},'primary');
 
 title('Pinch (single pinch gesture)');
 const pinchWrap=E('div','canvas-wrap');pinchWrap.style.height='220px';root.appendChild(pinchWrap);
