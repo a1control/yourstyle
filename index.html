@@ -774,7 +774,6 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 
 <script>
 const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook";
-const WEBHOOK2 = 'https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/camringwebhook';
 const COOLDOWN = 2100;
 let locked = false;
 let comboRunning = false;
@@ -972,8 +971,22 @@ title('Media');const pg=E('div','field');pg.innerHTML='<label>Player</label><sel
 let g=grid();btn(g,'Previous',()=>send('?Tempvar=mediakey&mk=88'));btn(g,'Next',()=>send('?Tempvar=mediakey&mk=87'));btn(g,'Stop',()=>send('?Tempvar=mediakey&mk=86'));[['Play/Pause','pp',85],['Play','play',126],['Pause','pause',127]].forEach(([l,k,c])=>btn(g,l,()=>{const p=$('pl').value;send(p=='uni'?'?Tempvar=mediakey&mk='+c:'?Tempvar=m_'+p+'_'+k)}));
 g=grid();btn(g,'« 10s',()=>send('?Tempvar=seekbwd'));btn(g,'10s »',()=>send('?Tempvar=seekfwd'));
 title('Play audio by name');const au=inp('song name','Audio file name');g=E('div','grid-2');root.appendChild(g);btn(g,'Play',()=>{if(au.value.trim())send('?Tempvar=playaudio&p1='+enc(au.value.trim()))},'primary');btn(g,'Stop',()=>send('?Tempvar=stopaudio'),'danger');
-title('Volume');[['Media','setvol_media','vol'],['Ring','setvol_ring','rvol'],['Alarm','setvol_alarm','avol']].forEach(([l,k,vn])=>{const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">50</div></div><input type="range" min="0" max="100" value="50">';const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>v.textContent=r.value;r.onchange=()=>send('?Tempvar='+k+'&'+vn+'='+r.value);root.appendChild(w)});
-g=grid();btn(g,'Mute all',()=>send('?Tempvar=muteall'),'danger');btn(g,'Unmute (50%)',()=>send('?Tempvar=unmuteall'),'primary');
+title('Volume');
+const volumeMemory={vol:50,rvol:50,avol:50};
+[['Media','setvol_media','vol'],['Ring','setvol_ring','rvol'],['Alarm','setvol_alarm','avol']].forEach(([l,k,vn])=>{
+  const w=E('div','slider-wrap');
+  w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">50</div></div><input type="range" min="0" max="100" value="50">';
+  const r=w.querySelector('input'),v=w.querySelector('.slider-value');
+  const apply=value=>{const n=Math.max(0,Math.min(100,Math.round(value)));r.value=n;v.textContent=n;if(n>0)volumeMemory[vn]=n;send('?Tempvar='+k+'&'+vn+'='+n)};
+  let unmuteBtn;
+  r.oninput=()=>{v.textContent=r.value;if(+r.value>0)volumeMemory[vn]=+r.value;if(unmuteBtn)unmuteBtn.textContent='Unmute ('+(volumeMemory[vn]||50)+'%)'};
+  r.onchange=()=>send('?Tempvar='+k+'&'+vn+'='+r.value);
+  root.appendChild(w);
+  const controls=E('div','grid-2');root.appendChild(controls);
+  btn(controls,'Mute',()=>apply(0),'danger');
+  unmuteBtn=btn(controls,'Unmute ('+(volumeMemory[vn]||50)+'%)',()=>apply(volumeMemory[vn]||50),'primary');
+});
+g=grid();btn(g,'Mute All',()=>send('?Tempvar=muteall'),'danger');btn(g,'Total Unmute (50%)',()=>send('?Tempvar=unmuteall'),'primary');
 g=grid();btn(g,'Volume +',()=>send('?Tempvar=volup'));btn(g,'Volume -',()=>send('?Tempvar=voldown'));
 title('WhatsApp');const wf=E('div','field');wf.innerHTML='<label>Account</label><select id="wacc" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px"><option value="wa">WhatsApp</option><option value="wab">WhatsApp Business</option></select>';root.appendChild(wf);const wn=inp('919876543210 (country code, no +)','Number'),wm=inp('Message','Message');g=E('div','grid-2');root.appendChild(g);
 btn(g,'Open chat',()=>send('?Tempvar='+$('wacc').value+'_open&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)));btn(g,'Send now',()=>send('?Tempvar='+$('wacc').value+'_send&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)),'primary');
@@ -987,11 +1000,13 @@ title('Web and clipboard');const ui=inp('https://...','Website or text');g=E('di
 btn(g,'Open website',()=>send('?Tempvar=openurl&p1='+enc(ui.value)));btn(g,'Set clipboard',()=>send('?Tempvar=setclip&p1='+enc(ui.value)));
 title('Quick access');g=grid();[['Quick settings',5],['Power menu',6],['Screenshot (system)',9]].forEach(([l,n])=>btn(g,l,()=>send('?Tempvar=global&ga='+n)));btn(g,'Screenshot',()=>send('?Tempvar=ss'));
 title('Location');g=grid();btn(g,'Update location',()=>send('?Tempvar=updateloc'));const le=inp('you@gmail.com','Share location to (email)');btn(root,'Update and share location',()=>{if(le.value.trim())send('?Tempvar=shareloc&p1='+enc(le.value.trim()))},'primary');
-title('Record');g=grid();[15,30,60,120,300].forEach(n=>btn(g,'Mic '+n+'s',()=>send('?Tempvar=recmic'+n)));[['Video rear','Rec Video Rear'],['Video selfie','Rec Video Selfie'],['Stop video','Stop Video']].forEach(([l,n])=>btn(g,l,()=>send('?Tempvar=runmacro&p1='+enc(n))));
+title('Record');g=grid();[15,30,60,120,300].forEach(n=>btn(g,'Mic '+n+'s',()=>send('?Tempvar=recmic'+n)));
+g=grid();btn(g,'Rear video · 30s',()=>send('?Tempvar=video_rear'),'primary');btn(g,'Selfie video · 30s',()=>send('?Tempvar=video_selfie'),'primary');
+const videoNote=E('div','field');videoNote.textContent='Video recordings save to DCIM/macrodriodhidden and stop automatically after 30 seconds.';videoNote.style.cssText='font-size:.72rem;color:var(--muted);margin-top:4px';root.appendChild(videoNote);
 title('Camera ring overlay');
 const rc=document.createElement('input');rc.type='color';rc.value='#ff2d55';rc.style.cssText='width:56px;height:44px;border:none;border-radius:10px;background:none';
 const rcRow=E('div','grid-2');root.appendChild(rcRow);rcRow.appendChild(rc);
-const ringSend=cmd=>{if(!WEBHOOK2){showToast('Set WEBHOOK2 in the page source first');return}if(locked||comboRunning){showToast('Please wait...');return}$('worker').src=WEBHOOK2+cmd+'&ts='+Date.now();showToast('Action sent');lockUI(1100);};
+const ringSend=cmd=>send(cmd);
 btn(rcRow,'Hide ring',()=>ringSend('?Tempvar=hide'),'danger');
 const ringSliders={h:50,v:29,w:34,ht:33,th:6,fe:0,al:100};
 ['Horizontal %','Vertical %','Width','Height','Thickness','Feather %','Opacity %'].forEach((l,idx)=>{
@@ -999,12 +1014,12 @@ const ringSliders={h:50,v:29,w:34,ht:33,th:6,fe:0,al:100};
   const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">'+ringSliders[key]+'</div></div><input type="range" min="0" max="'+max+'" value="'+ringSliders[key]+'">';
   const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>{v.textContent=r.value;ringSliders[key]=+r.value};root.appendChild(w);
 });
-const ringProg=inp('0-100','Progress value (progress-ring mode)');
 const ringDraw=E('div','field');ringDraw.innerHTML='<label>Show over lock screen / other apps</label><input type="checkbox" id="ringDrawChk" style="width:24px;height:24px">';root.appendChild(ringDraw);
 let g2=E('div','grid-2');root.appendChild(g2);
-const ringQS=()=>'&p1='+rc.value.replace('#','')+'&h='+ringSliders.h+'&v='+ringSliders.v+'&w='+ringSliders.w+'&ht='+ringSliders.ht+'&th='+ringSliders.th+'&fe='+ringSliders.fe+'&al='+(ringSliders.al/100)+'&to=10&draw='+($('ringDrawChk').checked?'true':'false');
+const ringDuration=E('div','field');ringDuration.innerHTML='<label>Glow duration (seconds, 1–60)</label><input id="ringDuration" type="number" min="1" max="60" value="10" style="width:100%;background:#182033;border:1px solid var(--border);border-radius:11px;padding:12px;color:var(--text)">';root.appendChild(ringDuration);
+const ringQS=()=>{const d=Math.max(1,Math.min(60,parseInt($('ringDuration').value,10)||10));$('ringDuration').value=d;return '&p1='+rc.value.replace('#','')+'&h='+ringSliders.h+'&v='+ringSliders.v+'&w='+ringSliders.w+'&ht='+ringSliders.ht+'&th='+ringSliders.th+'&fe='+ringSliders.fe+'&al='+(ringSliders.al/100)+'&to='+d+'&draw='+($('ringDrawChk').checked?'true':'false')};
 btn(g2,'Show ring',()=>ringSend('?Tempvar=show'+ringQS()),'primary');
-btn(g2,'Show as progress ring',()=>{if(!ringProg.value.trim()){showToast('Enter a progress value 0-100');return}ringSend('?Tempvar=showprogress'+ringQS()+'&prog='+ringProg.value.trim())},'primary');
+btn(g2,'Show progress-style ring',()=>ringSend('?Tempvar=showprogress'+ringQS()),'primary');
 
 title('Pinch (single pinch gesture)');
 const pinchWrap=E('div','canvas-wrap');pinchWrap.style.height='220px';root.appendChild(pinchWrap);
