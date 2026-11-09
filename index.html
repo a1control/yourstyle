@@ -710,6 +710,8 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
     <div class="btn" data-action="?Tempvar=takephoto">Selfie</div>
     <div class="btn" data-action="?Tempvar=htspton">Hotspot On</div>
     <div class="btn" data-action="?Tempvar=htsptoff">Hotspot Off</div>
+    <div class="btn" data-action="?Tempvar=dataon">Mobile Data On</div>
+    <div class="btn" data-action="?Tempvar=dataoff">Mobile Data Off</div>
     <div class="btn" data-action="?Tempvar=fullvolume">Full Vol</div>
   </div>
 </div>
@@ -894,7 +896,8 @@ function steps(i){const out=[];
 // Canvas keeps the same aspect ratio as the phone screen
 function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);x.strokeStyle='rgba(148,163,184,.35)';x.lineWidth=2;const r=Math.min(w,h)*.08;x.beginPath();if(x.roundRect)x.roundRect(3,3,w-6,h-6,r);else x.rect(3,3,w-6,h-6);x.stroke();x.fillStyle='rgba(148,163,184,.5)';x.fillRect(w/2-14,5,28,4);x.beginPath();x.arc(w/2,h-10,4,0,7);x.fill()}
 function fit(){const W=SW(),H=SH(),w0=$('canvasWrap').clientWidth||300;
-  let w=w0,h=Math.min(w0*H/W,Math.max(260,Math.min(380,innerHeight*.48)));
+  let w=w0,h=w0*H/W;const cap=Math.max(260,Math.min(520,innerHeight*.55));
+  if(h>cap){h=cap;w=h*W/H}
   cv.style.width=w+'px';cv.style.height=h+'px';cv.style.margin='0 auto';cv.style.touchAction='none';
   cv.width=w*dpr;cv.height=h*dpr;draw()}
 function draw(){drawOutline();const w=cv.clientWidth,h=cv.clientHeight;
