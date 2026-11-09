@@ -584,10 +584,10 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
   </div>
   <div class="field-row">
     <div class="field"><label>Chain mode (fast, no Shizuku)</label><input type="checkbox" id="contMode" checked style="width:24px;height:24px"></div>
-    <div class="field"><label>Points per stroke</label><input type="number" id="maxPts" value="90"></div>
+    <div class="field"><label>Points per stroke</label><input type="number" id="maxPts" value="30"></div>
   </div>
   <div class="field"><label>Edge safe margin px</label><input type="number" id="edgeM" value="40"></div>
-  <div class="field"><label>Smooth mode (recommended)</label><input type="checkbox" id="smooth" checked style="width:24px;height:24px"></div>
+  <div class="field"><label>Smooth mode (optional)</label><input type="checkbox" id="smooth" style="width:24px;height:24px"></div>
   <div class="field"><label>Time per point ms</label><input type="number" id="msPt" value="250"></div>
   <div class="ptabs" id="platTabs"></div>
   <div class="combo-status" id="comboStatus"><span class="step" id="comboStep"></span> on <span id="comboName"></span></div>
@@ -619,7 +619,7 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
   </div>
   <div class="grid-2" style="margin-bottom:12px">
     <button class="btn primary" onclick="send('?speak='+v('speak')+'&Tempvar=speak')">Speak</button>
-    <button class="btn" onclick="send('?Tempvar=speakapp')">Say current app running</button>
+    <button class="btn" onclick="send('?Tempvar=speakapp')">Say current app running (now)</button>
   </div>
 
   <div class="field">
@@ -875,7 +875,7 @@ function rdp(p,e){if(p.length<3)return p;let m=0,k=0;const a=p[0],b=p[p.length-1
   for(let i=1;i<p.length-1;i++){const d=dist(p[i],a,b);if(d>m){m=d;k=i}}
   return m>e?rdp(p.slice(0,k+1),e).slice(0,-1).concat(rdp(p.slice(k),e)):[a,b]}
 function simp(s,MM){const W=SW(),H=SH(),M=Math.max(1,num('maxSeg',8));
-  const M2=MM||($('smooth').checked?Math.max(2,num('maxPts',90))-1:($('contMode').checked?15:M));const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=1.5,r=rdp(p,e);
+  const M2=MM||($('smooth').checked?Math.max(2,num('maxPts',90))-1:($('contMode').checked?15:M));const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=4,r=rdp(p,e);
   while(r.length-1>M2&&e<3000){e*=1.4;r=rdp(p,e)}
   const mg=num('edgeM',40);return r.map(q=>({x:Math.min(W-mg,Math.max(mg,Math.round(q.x))),y:Math.min(H-mg,Math.max(mg,Math.round(q.y)))}))}
 
@@ -894,7 +894,7 @@ function steps(i){const out=[];
 // Canvas keeps the same aspect ratio as the phone screen
 function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);x.strokeStyle='rgba(148,163,184,.35)';x.lineWidth=2;const r=Math.min(w,h)*.08;x.beginPath();if(x.roundRect)x.roundRect(3,3,w-6,h-6,r);else x.rect(3,3,w-6,h-6);x.stroke();x.fillStyle='rgba(148,163,184,.5)';x.fillRect(w/2-14,5,28,4);x.beginPath();x.arc(w/2,h-10,4,0,7);x.fill()}
 function fit(){const W=SW(),H=SH(),w0=$('canvasWrap').clientWidth||300;
-  let w=w0,h=w0*H/W;
+  let w=w0,h=Math.min(w0*H/W,Math.max(260,Math.min(380,innerHeight*.48)));
   cv.style.width=w+'px';cv.style.height=h+'px';cv.style.margin='0 auto';cv.style.touchAction='none';
   cv.width=w*dpr;cv.height=h*dpr;draw()}
 function draw(){drawOutline();const w=cv.clientWidth,h=cv.clientHeight;
@@ -991,8 +991,10 @@ const volumeMemory={vol:50,rvol:50,avol:50};
 });
 g=grid();btn(g,'Mute All',()=>send('?Tempvar=muteall'),'danger');btn(g,'Total Unmute (50%)',()=>send('?Tempvar=unmuteall'),'primary');
 g=grid();btn(g,'Volume +',()=>send('?Tempvar=volup'));btn(g,'Volume -',()=>send('?Tempvar=voldown'));
-title('WhatsApp');const wf=E('div','field');wf.innerHTML='<label>Account</label><select id="wacc" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px"><option value="wa">WhatsApp</option><option value="wab">WhatsApp Business</option></select>';root.appendChild(wf);const wn=inp('919876543210 (country code, no +)','Number'),wm=inp('Message','Message');g=E('div','grid-2');root.appendChild(g);
-btn(g,'Open chat',()=>send('?Tempvar='+$('wacc').value+'_open&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)));btn(g,'Send now',()=>send('?Tempvar='+$('wacc').value+'_send&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)),'primary');
+title('WhatsApp');const wf=E('div','field');wf.innerHTML='<label>Account</label><select id="wacc" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px"><option value="wa">WhatsApp</option><option value="wab">WhatsApp Business</option></select>';root.appendChild(wf);const wn=inp('919876543210 (country code, no +)','Number'),wm=inp('Message','Message');
+const waDelayWrap=E('div','field');waDelayWrap.innerHTML='<label>Send tap delay: <strong id="waDelayLabel">2 seconds</strong></label><input id="waDelay" type="range" min="1" max="4" step="1" value="2" style="width:100%"><small style="color:var(--muted)">Default 2s. Increase only if WhatsApp has not finished opening.</small>';root.appendChild(waDelayWrap);$('waDelay').oninput=()=>{$('waDelayLabel').textContent=$('waDelay').value+' seconds'};g=E('div','grid-2');root.appendChild(g);
+const waSendQuery=mode=>'?Tempvar='+$('wacc').value+'_'+mode+'&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)+'&waDelay='+$('waDelay').value;
+btn(g,'Open chat',()=>send(waSendQuery('open')));btn(g,'Send now',()=>send(waSendQuery('send')),'primary');
 title('Phone');const pn=inp('Number','Number or SMS text');g=E('div','grid-3');root.appendChild(g);
 btn(g,'Open dialer',()=>send('?Tempvar=opendialer&p1='+enc(pn.value)));btn(g,'SMS draft',()=>send('?Tempvar=opensms&p1='+enc(pn.value)+'&p2='+enc(wm.value)));btn(g,'Reject call',()=>send('?Tempvar=rejectcall'),'danger');
 title('Touch lock');let on=false;const tb=btn(root,'Block touches: OFF',()=>{on=!on;tb.textContent='Block touches: '+(on?'ON':'OFF');send('?Tempvar='+(on?'blockon':'blockoff'))},'primary');
@@ -1017,7 +1019,7 @@ const ringSliders={h:50,v:29,w:34,ht:33,th:6,fe:0,al:100};
   const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">'+ringSliders[key]+'</div></div><input type="range" min="0" max="'+max+'" value="'+ringSliders[key]+'">';
   const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>{v.textContent=r.value;ringSliders[key]=+r.value};root.appendChild(w);
 });
-const ringDraw=E('div','field');ringDraw.innerHTML='<label>Show over lock screen / other apps</label><input type="checkbox" id="ringDrawChk" checked style="width:24px;height:24px">';root.appendChild(ringDraw);
+const ringDraw=E('div','field');ringDraw.innerHTML='<label>Show over lock screen / other apps (requires overlay permission)</label><input type="checkbox" id="ringDrawChk" style="width:24px;height:24px">';root.appendChild(ringDraw);
 let g2=E('div','grid-2');root.appendChild(g2);
 const ringDuration=E('div','field');ringDuration.innerHTML='<label>Glow duration (seconds, 1–60)</label><input id="ringDuration" type="number" min="1" max="60" value="10" style="width:100%;background:#182033;border:1px solid var(--border);border-radius:11px;padding:12px;color:var(--text)">';root.appendChild(ringDuration);
 const ringQS=()=>{const d=Math.max(1,Math.min(60,parseInt($('ringDuration').value,10)||10));$('ringDuration').value=d;return '&p1='+rc.value.replace('#','')+'&h='+ringSliders.h+'&v='+ringSliders.v+'&w='+ringSliders.w+'&ht='+ringSliders.ht+'&th='+ringSliders.th+'&fe='+ringSliders.fe+'&al='+(ringSliders.al/100)+'&to='+d+'&draw='+($('ringDrawChk').checked?'true':'false')};
@@ -1025,7 +1027,7 @@ btn(g2,'Show ring',()=>ringSend('?Tempvar=show'+ringQS()),'primary');
 btn(g2,'Show progress-style ring',()=>ringSend('?Tempvar=showprogress'+ringQS()),'primary');
 
 title('Pinch (single pinch gesture)');
-const pinchWrap=E('div','canvas-wrap');pinchWrap.style.aspectRatio='1272 / 2800';pinchWrap.style.height='auto';root.appendChild(pinchWrap);
+const pinchWrap=E('div','canvas-wrap');pinchWrap.style.height='220px';root.appendChild(pinchWrap);
 const pc=document.createElement('canvas');pc.style.cssText='width:100%;height:100%;touch-action:none';pinchWrap.appendChild(pc);
 const ph=E('div','canvas-hint','Two fingers: pinch in or out here');pinchWrap.appendChild(ph);
 (function(){
@@ -1033,7 +1035,7 @@ const ph=E('div','canvas-hint','Two fingers: pinch in or out here');pinchWrap.ap
  let active=new Map(), pair=null, sent=false;
  const W=()=>SW(), H=()=>SH();
  function fit(){
-  const w=pc.clientWidth||300,h=pc.clientHeight||660;
+  const w=pc.clientWidth||300,h=pc.clientHeight||220;
   pc.width=Math.round(w*devicePixelRatio);pc.height=Math.round(h*devicePixelRatio);
   ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);draw();
  }
