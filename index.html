@@ -497,10 +497,10 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 <div class="sticky-top">
   <div class="header">
     <h1>MacroDroid Controller</h1>
-    <div class="sub">Remote Device Control</div>
+    <div class="sub">Remote Device Control · v8</div>
     <div class="status">
       <div class="status-dot"></div>
-      <span id="connStatus">Webhook Ready</span>
+      <span id="connStatus">Webhook Ready · v8</span>
     </div>
   </div>
   <div class="cooldown-bar" id="cooldownBar">
@@ -579,7 +579,7 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
     <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2400"></div>
   </div>
   <div class="field-row">
-    <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="2800"></div>
+    <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="1200"></div>
     <div class="field"><label>Max moves per stroke</label><input type="number" id="maxSeg" value="8"></div>
   </div>
   <div class="field-row">
@@ -600,6 +600,15 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
     <button class="btn" id="clearBtn">Clear pad</button>
     <button class="btn danger" id="delBtn">Delete pad</button>
   </div>
+  <div class="field-row" style="margin-bottom:10px;align-items:center">
+    <div class="field" style="margin:0"><label>Live mode (control phone while you draw)</label>
+      <input type="checkbox" id="liveMode" style="width:24px;height:24px">
+    </div>
+    <div class="field" style="margin:0"><label>Live gap ms</label>
+      <input type="number" id="liveGap" value="350" min="200" max="1200">
+    </div>
+  </div>
+  <div id="liveStatus" style="font-size:.75rem;color:var(--green);margin-bottom:8px;display:none">LIVE — moves send while you slide</div>
   <div class="field"><label>Wait after this platform ms</label><input type="number" id="platWait" value="2000"></div>
   <div id="seqInfo" style="font-size:.75rem;color:var(--muted);margin-bottom:12px"></div>
   <div class="grid-2">
@@ -614,10 +623,10 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
   <div class="card-title">Media & Text</div>
 
   <div class="field">
-    <label>Speak Text</label>
-    <input type="text" id="speak" placeholder="What to speak">
+    <label>Speak Text (Hindi + English supported — set phone TTS to Hindi for best voice)</label>
+    <input type="text" id="speak" placeholder="नमस्ते / Hello — what to speak">
   </div>
-  <button class="btn primary" style="width:100%;margin-bottom:12px" onclick="send('?speak='+v('speak')+'&Tempvar=speak')">Speak</button>
+  <button class="btn primary" style="width:100%;margin-bottom:12px" onclick="send('?speak='+encodeURIComponent(v('speak'))+'&Tempvar=speak')">Speak</button>
 
   <div class="field">
     <label>Toast Message</label>
@@ -705,9 +714,13 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
     <div class="btn" data-action="?Tempvar=bton">BT On</div>
     <div class="btn" data-action="?Tempvar=btoff">BT Off</div>
     <div class="btn" data-action="?Tempvar=takephoto">Selfie</div>
+    <div class="btn" data-action="?Tempvar=rearphoto">Rear Photo</div>
     <div class="btn" data-action="?Tempvar=htspton">Hotspot On</div>
     <div class="btn" data-action="?Tempvar=htsptoff">Hotspot Off</div>
-    <div class="btn" data-action="?Tempvar=fullvolume">Full Vol</div>
+    <div class="btn" data-action="?Tempvar=fullvolume">Full Media</div>
+    <div class="btn" data-action="?Tempvar=mutemedia">Mute Media</div>
+    <div class="btn" data-action="?Tempvar=airplaneon">Airplane On</div>
+    <div class="btn" data-action="?Tempvar=airplaneoff">Airplane Off</div>
   </div>
 </div>
 
@@ -775,7 +788,7 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 <script>
 const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook";
 const WEBHOOK2 = 'https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/camringwebhook';
-const COOLDOWN = 2100;
+const COOLDOWN = 900;
 let locked = false;
 let comboRunning = false;
 
@@ -890,7 +903,26 @@ function steps(i){const out=[];
   return out}
 
 // Canvas keeps the same aspect ratio as the phone screen
-function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);x.strokeStyle='rgba(148,163,184,.35)';x.lineWidth=2;const r=Math.min(w,h)*.08;x.beginPath();if(x.roundRect)x.roundRect(3,3,w-6,h-6,r);else x.rect(3,3,w-6,h-6);x.stroke();x.fillStyle='rgba(148,163,184,.5)';x.fillRect(w/2-14,5,28,4);x.beginPath();x.arc(w/2,h-10,4,0,7);x.fill()}
+function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+  // outer phone body
+  x.strokeStyle='rgba(148,163,184,.55)';x.lineWidth=2.5;const r=Math.min(w,h)*.09;
+  x.beginPath();if(x.roundRect)x.roundRect(2,2,w-4,h-4,r);else x.rect(2,2,w-4,h-4);x.stroke();
+  // inner screen border
+  x.strokeStyle='rgba(148,163,184,.22)';x.lineWidth=1;
+  x.beginPath();if(x.roundRect)x.roundRect(10,18,w-20,h-36,r*0.55);else x.rect(10,18,w-20,h-36);x.stroke();
+  // notch / camera punch
+  x.fillStyle='rgba(148,163,184,.55)';x.fillRect(w/2-22,6,44,5);
+  x.beginPath();x.arc(w/2,11,3.5,0,7);x.fill();
+  // home indicator
+  x.fillStyle='rgba(148,163,184,.4)';x.fillRect(w/2-18,h-12,36,4);
+  // quadrant guides (map)
+  x.strokeStyle='rgba(59,130,246,.12)';x.lineWidth=1;x.setLineDash([4,6]);
+  x.beginPath();x.moveTo(w/2,18);x.lineTo(w/2,h-18);x.moveTo(10,h/2);x.lineTo(w-10,h/2);x.stroke();
+  x.setLineDash([]);
+  // corner labels
+  x.fillStyle='rgba(148,163,184,.35)';x.font='10px sans-serif';
+  x.fillText('TL',14,30);x.fillText('TR',w-28,30);x.fillText('BL',14,h-22);x.fillText('BR',w-28,h-22);
+}
 function fit(){const W=SW(),H=SH(),w0=$('canvasWrap').clientWidth||300;
   let w=w0,h=Math.min(w0*H/W,innerHeight*.75);
   cv.style.width=w+'px';cv.style.height=h+'px';cv.style.margin='0 auto';cv.style.touchAction='none';
@@ -911,17 +943,48 @@ function tabs(){const t=$('platTabs');t.innerHTML='';
   const a=document.createElement('div');a.className='ptab';a.textContent='+ Add platform';
   a.onclick=()=>{if(comboRunning)return;P.push({s:[],w:2000});cur=P.length-1;refresh()};t.appendChild(a)}
 const ptT=q=>q.startsWith('?Tempvar=gesture')?Math.max(+q.match(/dur=(\d+)/)[1],((q.match(/PX\d+=/g)||[]).length-1)*num('msPt',250)):q.startsWith('?sd=')?(q.split('&').length/2-1)*num('msPt',250):0;
-function info(){let m=0,t=0;const g=Math.max(2100,num('gapMs',2800));
+function info(){let m=0,t=0;const g=Math.max(900,num('gapMs',1200));
   P.forEach((p,i)=>{const st=steps(i);m+=st.length;t+=st.reduce((a,q)=>a+g+ptT(q),0)+(st.length?p.w:0)});
   $('seqInfo').textContent=`${m} moves in total, about ${Math.round(t/1000)} seconds`}
 function refresh(){$('platWait').value=P[cur].w;tabs();draw();info();save()}
 
-// Drawing (mouse + touch)
+// Drawing (mouse + touch) + Live mode
 const pt=e=>{const r=cv.getBoundingClientRect();
   return{t:e.timeStamp,x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}};
-cv.onpointerdown=e=>{if(comboRunning)return;e.preventDefault();cv.setPointerCapture(e.pointerId);drawing=[pt(e)];draw()};
-cv.onpointermove=e=>{const p=pt(e);lastPt=p;const dot=$('liveDot');if(dot){dot.style.left=(p.x*100)+'%';dot.style.top=(p.y*100)+'%';dot.style.display='block'}if(drawing){drawing.push(p);draw()}};
-cv.onpointerup=cv.onpointercancel=()=>{if(drawing){P[cur].s.push(drawing);drawing=null;refresh()}};
+let liveLastSend=0, liveLastXY=null;
+function liveSendTap(nx,ny){
+  if(locked||comboRunning)return;
+  const X=Math.round(nx*SW()),Y=Math.round(ny*SH());
+  const mg=num('edgeM',40);
+  const x=Math.min(SW()-mg,Math.max(mg,X)), y=Math.min(SH()-mg,Math.max(mg,Y));
+  // lightweight send without full UI lock for live feel
+  $('worker').src=WEBHOOK+'?X='+x+'&Y='+y+'&ts='+Date.now();
+  liveLastXY={x,y};
+}
+function liveSendSwipe(a,b){
+  if(locked||comboRunning)return;
+  const mg=num('edgeM',40);
+  const sx=Math.min(SW()-mg,Math.max(mg,Math.round(a.x*SW())));
+  const sy=Math.min(SH()-mg,Math.max(mg,Math.round(a.y*SH())));
+  const ex=Math.min(SW()-mg,Math.max(mg,Math.round(b.x*SW())));
+  const ey=Math.min(SH()-mg,Math.max(mg,Math.round(b.y*SH())));
+  if(sx===ex&&sy===ey){liveSendTap(b.x,b.y);return}
+  $('worker').src=WEBHOOK+'?SX='+sx+'&SY='+sy+'&EX='+ex+'&EY='+ey+'&ts='+Date.now();
+  liveLastXY={x:ex,y:ey};
+}
+cv.onpointerdown=e=>{if(comboRunning)return;e.preventDefault();cv.setPointerCapture(e.pointerId);drawing=[pt(e)];draw();
+  const live=$('liveMode')&&$('liveMode').checked;const ls=$('liveStatus');if(ls)ls.style.display=live?'block':'none';
+  if(live){liveLastSend=performance.now();liveSendTap(drawing[0].x,drawing[0].y)}
+};
+cv.onpointermove=e=>{const p=pt(e);lastPt=p;const dot=$('liveDot');if(dot){dot.style.left=(p.x*100)+'%';dot.style.top=(p.y*100)+'%';dot.style.display='block'}
+  if(drawing){drawing.push(p);draw();
+    const live=$('liveMode')&&$('liveMode').checked;
+    if(live){const gap=Math.max(200,num('liveGap',350));const now=performance.now();
+      if(now-liveLastSend>=gap){const prev=drawing[Math.max(0,drawing.length-6)];liveSendSwipe(prev,p);liveLastSend=now}}
+  }
+};
+cv.onpointerup=cv.onpointercancel=()=>{if(drawing){P[cur].s.push(drawing);drawing=null;refresh()}
+  const ls=$('liveStatus');if(ls&&!($('liveMode')&&$('liveMode').checked))ls.style.display='none'};
 
 $('undoBtn').onclick=()=>{P[cur].s.pop();refresh()};
 $('clearBtn').onclick=()=>{P[cur].s=[];refresh()};
@@ -939,7 +1002,7 @@ async function exec(ids){
   if(locked||comboRunning){showToast('Please wait...');return}
   const items=ids.map(i=>({i,q:steps(i)})),total=items.reduce((a,b)=>a+b.q.length,0);
   if(!total){showToast('Draw something first');return}
-  const gap=Math.max(2100,num('gapMs',2800)),st=$('comboStatus');let n=0;
+  const gap=Math.max(900,num('gapMs',1200)),st=$('comboStatus');let n=0;
   comboRunning=true;stopReq=false;st.classList.add('active');
   document.querySelectorAll('.btn').forEach(b=>b.classList.add('disabled'));
   $('stopBtn').classList.remove('disabled');
@@ -973,11 +1036,16 @@ let g=grid();btn(g,'Previous',()=>send('?Tempvar=mediakey&mk=88'));btn(g,'Next',
 g=grid();btn(g,'« 10s',()=>send('?Tempvar=seekbwd'));btn(g,'10s »',()=>send('?Tempvar=seekfwd'));
 title('Play audio by name');const au=inp('song name','Audio file name');g=E('div','grid-2');root.appendChild(g);btn(g,'Play',()=>{if(au.value.trim())send('?Tempvar=playaudio&p1='+enc(au.value.trim()))},'primary');btn(g,'Stop',()=>send('?Tempvar=stopaudio'),'danger');
 title('Volume');[['Media','setvol_media','vol'],['Ring','setvol_ring','rvol'],['Alarm','setvol_alarm','avol']].forEach(([l,k,vn])=>{const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">50</div></div><input type="range" min="0" max="100" value="50">';const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>v.textContent=r.value;r.onchange=()=>send('?Tempvar='+k+'&'+vn+'='+r.value);root.appendChild(w)});
-g=grid();btn(g,'Volume +',()=>send('?Tempvar=volup'));btn(g,'Volume -',()=>send('?Tempvar=voldown'));
+g=grid();btn(g,'Volume +',()=>send('?Tempvar=volup'));btn(g,'Volume -',()=>send('?Tempvar=voldown'));btn(g,'Mute Media',()=>send('?Tempvar=mutemedia'),'danger');btn(g,'Full Media',()=>send('?Tempvar=fullvolume'),'primary');
 title('WhatsApp');const wf=E('div','field');wf.innerHTML='<label>Account</label><select id="wacc" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px"><option value="wa">WhatsApp</option><option value="wab">WhatsApp Business</option></select>';root.appendChild(wf);const wn=inp('919876543210 (country code, no +)','Number'),wm=inp('Message','Message');g=E('div','grid-2');root.appendChild(g);
 btn(g,'Open chat',()=>send('?Tempvar='+$('wacc').value+'_open&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)));btn(g,'Send now',()=>send('?Tempvar='+$('wacc').value+'_send&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)),'primary');
-title('Phone');const pn=inp('Number','Number or SMS text');g=E('div','grid-3');root.appendChild(g);
-btn(g,'Open dialer',()=>send('?Tempvar=opendialer&p1='+enc(pn.value)));btn(g,'SMS draft',()=>send('?Tempvar=opensms&p1='+enc(pn.value)+'&p2='+enc(wm.value)));btn(g,'Reject call',()=>send('?Tempvar=rejectcall'),'danger');
+btn(root,'Send then Back',async()=>{const acc=$('wacc').value,n=wn.value.replace(/\D/g,''),m=wm.value;if(!n){showToast('Enter number');return}send('?Tempvar='+acc+'_send&p1='+enc(n)+'&p2='+enc(m));await sleep(1800);send('?text=BACK')},'primary');
+title('Phone');
+const ccWrap=E('div','field');ccWrap.innerHTML='<label>Country code</label><select id="ccode" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px"><option value="+91">🇮🇳 +91 India</option><option value="+1">🇺🇸 +1 USA</option><option value="+44">🇬🇧 +44 UK</option><option value="+971">🇦🇪 +971 UAE</option><option value="+61">🇦🇺 +61 AU</option><option value="+81">🇯🇵 +81 JP</option><option value="">None (raw)</option></select>';root.appendChild(ccWrap);
+const pn=inp('9876543210','Number or SMS text');g=E('div','grid-3');root.appendChild(g);
+btn(g,'Call now',()=>{let n=pn.value.replace(/\D/g,'');const cc=$('ccode').value.replace('+','');if(cc&&n&&!n.startsWith(cc))n=cc+n;if(!n){showToast('Enter number');return}send('?Tempvar=makecall&p1='+enc(n))},'primary');
+btn(g,'Open dialer',()=>send('?Tempvar=opendialer&p1='+enc(pn.value)));btn(g,'SMS draft',()=>send('?Tempvar=opensms&p1='+enc(pn.value)+'&p2='+enc(wm.value)));
+g=E('div','grid-2');root.appendChild(g);btn(g,'Reject call',()=>send('?Tempvar=rejectcall'),'danger');btn(g,'Airplane toggle tip',()=>showToast('Use Airplane On/Off in Connectivity'));
 title('Touch lock');let on=false;const tb=btn(root,'Block touches: OFF',()=>{on=!on;tb.textContent='Block touches: '+(on?'ON':'OFF');send('?Tempvar='+(on?'blockon':'blockoff'))},'primary');
 title('Close an app');const ca=inp('app name, or "all apps"','App to close');g=E('div','grid-2');root.appendChild(g);btn(g,'Close app',()=>{if(ca.value.trim())send('?Tempvar=closeapp&p1='+enc(ca.value.trim()))},'danger');btn(g,'Open its App Info',()=>{if(ca.value.trim())send('?Tempvar=appinfo&p1='+enc(ca.value.trim()))});
 title('Run a macro (typos are fine)');const mi=inp('macro name','Macro');
@@ -1036,13 +1104,13 @@ const ph=E('div','canvas-hint','Two fingers: pinch in or out here');pinchWrap.ap
  pc.addEventListener('pointerup',finish);pc.addEventListener('pointercancel',finish);
 })();
 
-title('Photos');g=grid();btn(g,'Share last photo (email, confirm)',()=>{if(confirm('Email the newest photo from macrodriodhidden now?'))send('?Tempvar=sharelastphoto')},'primary');
+title('Photos');g=grid();btn(g,'Open last photo',()=>send('?Tempvar=openlastphoto'),'primary');btn(g,'Share last photo (email)',()=>{if(confirm('Email newest photo to akkumsgsjshjwej@gmail.com ?'))send('?Tempvar=sharelastphoto')},'primary');
 
 let gr='';SIMPLE.forEach(([k,l,c])=>{if(['Volume','Phone'].includes(c)&&1)return;if(c!=gr){gr=c;title(c);g=grid()}btn(g,l,()=>send('?Tempvar='+k))});
 })();
 window.addEventListener('resize',fit);
 fit();refresh();drawOutline();
-(function(){let ok=true;async function ping(){let good=navigator.onLine;if(good){try{const c=new AbortController();const t=setTimeout(()=>c.abort(),2500);const t0=performance.now();await fetch(location.href,{method:'HEAD',cache:'no-store',signal:c.signal});clearTimeout(t);good=(performance.now()-t0)<2500}catch(e){good=false}}if(good!==ok){ok=good;document.body.classList.toggle('offline',!ok);const cs=$('connStatus');if(cs)cs.textContent=ok?'Webhook Ready':'Connection slow/offline'}}
+(function(){let ok=true;async function ping(){let good=navigator.onLine;if(good){try{const c=new AbortController();const t=setTimeout(()=>c.abort(),2500);const t0=performance.now();await fetch(location.href,{method:'HEAD',cache:'no-store',signal:c.signal});clearTimeout(t);good=(performance.now()-t0)<2500}catch(e){good=false}}if(good!==ok){ok=good;document.body.classList.toggle('offline',!ok);const cs=$('connStatus');if(cs)cs.textContent=ok?'Webhook Ready · v8':'Connection slow/offline'}}
 ping();setInterval(ping,8000);window.addEventListener('online',ping);window.addEventListener('offline',ping)})();
 </script>
 </body>
