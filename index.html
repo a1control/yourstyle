@@ -894,7 +894,29 @@ function steps(i){const out=[];
   return out}
 
 // Canvas keeps the same aspect ratio as the phone screen
-function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);x.strokeStyle='rgba(148,163,184,.35)';x.lineWidth=2;const r=Math.min(w,h)*.08;x.beginPath();if(x.roundRect)x.roundRect(3,3,w-6,h-6,r);else x.rect(3,3,w-6,h-6);x.stroke();x.fillStyle='rgba(148,163,184,.5)';x.fillRect(w/2-14,5,28,4);x.beginPath();x.arc(w/2,h-10,4,0,7);x.fill()}
+function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+  const rr=(x0,y0,ww,hh,rad)=>{x.beginPath();if(x.roundRect)x.roundRect(x0,y0,ww,hh,rad);else x.rect(x0,y0,ww,hh)};
+  // bezel: rounded frame with a soft screen-glow fill, like a real phone resting on the card
+  const bez=Math.max(10,Math.min(w,h)*.045), rad=Math.min(w,h)*.11;
+  const grad=x.createLinearGradient(0,0,0,h); grad.addColorStop(0,'rgba(56,70,98,.16)'); grad.addColorStop(1,'rgba(20,26,40,.05)');
+  rr(bez*.4,bez*.4,w-bez*.8,h-bez*.8,rad); x.fillStyle=grad; x.fill();
+  x.lineWidth=Math.max(2,bez*.35); x.strokeStyle='rgba(148,163,184,.55)'; x.stroke();
+  // inner screen edge, slightly inset
+  rr(bez,bez,w-bez*2,h-bez*2,rad*.6); x.lineWidth=1; x.strokeStyle='rgba(148,163,184,.25)'; x.stroke();
+  // top notch (pill) with a camera dot
+  const nw=Math.min(w*.26,70), nh=Math.max(6,bez*.5);
+  rr(w/2-nw/2,bez*.55,nw,nh,nh/2); x.fillStyle='rgba(15,20,32,.9)'; x.fill(); x.strokeStyle='rgba(148,163,184,.3)'; x.lineWidth=1; x.stroke();
+  x.beginPath(); x.arc(w/2+nw*.28,bez*.55+nh/2,nh*.28,0,7); x.fillStyle='rgba(100,140,220,.5)'; x.fill();
+  // side button bumps (power + volume), purely decorative
+  const bw=Math.max(2,bez*.3), bl=Math.min(h*.06,34);
+  x.fillStyle='rgba(148,163,184,.4)';
+  x.fillRect(w-bez*.3,h*.17,bw,bl*.8);            // power
+  x.fillRect(-bw+bez*.3,h*.12,bw,bl*.6);          // volume up
+  x.fillRect(-bw+bez*.3,h*.12+bl*.8,bw,bl*.6);    // volume down
+  // faint centre crosshair to help judge position, very subtle
+  x.strokeStyle='rgba(148,163,184,.08)'; x.lineWidth=1;
+  x.beginPath(); x.moveTo(w/2,bez*1.6); x.lineTo(w/2,h-bez*1.6); x.moveTo(bez*1.6,h/2); x.lineTo(w-bez*1.6,h/2); x.stroke();
+}
 function fit(){const W=SW(),H=SH(),w0=$('canvasWrap').clientWidth||300;
   let w=w0,h=w0*H/W;const cap=Math.max(260,Math.min(520,innerHeight*.55));
   if(h>cap){h=cap;w=h*W/H}
