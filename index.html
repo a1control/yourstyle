@@ -998,6 +998,16 @@ title('WhatsApp');const wf=E('div','field');wf.innerHTML='<label>Account</label>
 const waDelayWrap=E('div','field');waDelayWrap.innerHTML='<label>Send tap delay: <strong id="waDelayLabel">2 seconds</strong></label><input id="waDelay" type="range" min="1" max="4" step="1" value="2" style="width:100%"><small style="color:var(--muted)">Default 2s. Increase only if WhatsApp has not finished opening.</small>';root.appendChild(waDelayWrap);$('waDelay').oninput=()=>{$('waDelayLabel').textContent=$('waDelay').value+' seconds'};g=E('div','grid-2');root.appendChild(g);
 const waSendQuery=mode=>'?Tempvar='+$('wacc').value+'_'+mode+'&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)+'&waDelay='+$('waDelay').value;
 btn(g,'Open chat',()=>send(waSendQuery('open')));btn(g,'Send now',()=>send(waSendQuery('send')),'primary');
+title('One-click call');
+const ccDrop=document.createElement('select');ccDrop.style.cssText='width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px;margin-bottom:10px';
+[['+91','India +91'],['+1','USA/Canada +1'],['+44','UK +44'],['+971','UAE +971'],['+61','Australia +61'],['+880','Bangladesh +880'],['+92','Pakistan +92'],['+65','Singapore +65'],['+966','Saudi Arabia +966'],['+974','Qatar +974']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;ccDrop.appendChild(o)});
+root.appendChild(ccDrop);
+const cn=inp('phone number (no country code)','Number');
+btn(root,'Call now',()=>{const num=cn.value.replace(/\D/g,'');if(!num){showToast('Enter a number');return}const full=ccDrop.value+num;if(!confirm('Call '+full+' ?'))return;send('?Tempvar=makecall&p1='+encodeURIComponent(full))},'primary');
+title('Animation & Edge light');g=E('div','grid-2');root.appendChild(g);
+btn(g,'Loading animation',()=>send('?Tempvar=animplay'),'primary');btn(g,'Stop animation',()=>send('?Tempvar=animstop'),'danger');
+const elc=document.createElement('input');elc.type='color';elc.value='#22d3ee';elc.style.cssText='width:56px;height:44px;border:none;border-radius:10px;background:none;margin:8px 0';root.appendChild(elc);
+btn(root,'Flash edge light (selected colour)',()=>send('?Tempvar=edgecolor&p1='+elc.value.replace('#','')),'primary');
 title('Phone');const pn=inp('Number','Number or SMS text');g=E('div','grid-3');root.appendChild(g);
 btn(g,'Open dialer',()=>send('?Tempvar=opendialer&p1='+enc(pn.value)));btn(g,'SMS draft',()=>send('?Tempvar=opensms&p1='+enc(pn.value)+'&p2='+enc(wm.value)));btn(g,'Reject call',()=>send('?Tempvar=rejectcall'),'danger');
 title('Touch lock');let on=false;const tb=btn(root,'Block touches: OFF',()=>{on=!on;tb.textContent='Block touches: '+(on?'ON':'OFF');send('?Tempvar='+(on?'blockon':'blockoff'))},'primary');
@@ -1093,8 +1103,10 @@ let gr='';SIMPLE.forEach(([k,l,c])=>{if(['Volume','Phone'].includes(c)&&1)return
 })();
 window.addEventListener('resize',fit);
 fit();refresh();drawOutline();
-(function(){let ok=true;async function ping(){let good=navigator.onLine;if(good){try{const c=new AbortController();const t=setTimeout(()=>c.abort(),2500);const t0=performance.now();await fetch(location.href,{method:'HEAD',cache:'no-store',signal:c.signal});clearTimeout(t);good=(performance.now()-t0)<2500}catch(e){good=false}}if(good!==ok){ok=good;document.body.classList.toggle('offline',!ok);const cs=$('connStatus');if(cs)cs.textContent=ok?'Webhook Ready':'Connection slow/offline'}}
-ping();setInterval(ping,8000);window.addEventListener('online',ping);window.addEventListener('offline',ping)})();
+(function(){let ok=true,fails=0;async function ping(){let good=navigator.onLine;if(good){try{const c=new AbortController();const t=setTimeout(()=>c.abort(),4000);const t0=performance.now();await fetch(location.href,{method:'GET',cache:'no-store',mode:'no-cors',signal:c.signal});clearTimeout(t);good=(performance.now()-t0)<4000}catch(e){good=false}}
+  fails=good?0:fails+1;const show=fails>=2;
+  if(show!==!ok){ok=!show;document.body.classList.toggle('offline',show);const cs=$('connStatus');if(cs)cs.textContent=ok?'Webhook Ready':'Connection slow/offline'}}
+ping();setInterval(ping,10000);window.addEventListener('online',ping);window.addEventListener('offline',ping)})();
 </script>
 </body>
 </html>
