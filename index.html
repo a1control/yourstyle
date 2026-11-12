@@ -490,6 +490,11 @@ input[type="range"]::-webkit-slider-thumb {
 .ptab{flex:0 0 auto;padding:9px 14px;background:#182033;border-radius:10px;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer}
 .ptab.on{background:var(--accent);color:#fff}
 body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
+#liveCanvasWrap{min-height:190px;background:#0b1322}
+#liveCanvas{position:relative;z-index:1}
+#liveStatus.live-active{color:#22c55e}
+#liveStatus.live-error{color:#f87171}
+#liveModeCard .btn.disabled{opacity:.4;pointer-events:none}
 </style>
 </head>
 <body>
@@ -569,6 +574,23 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
     </div>
     <button class="btn primary" style="width:100%" onclick="send('?SX='+v('SX')+'&SY='+v('SY')+'&EX='+v('EX')+'&EY='+v('EY'))">Run Gesture</button>
   </div>
+</div>
+
+<!-- LIVE TOUCH MODE -->
+<div class="card" id="liveModeCard">
+  <div class="card-title">Live Touch Mode</div>
+  <p style="font-size:.76rem;color:var(--muted);line-height:1.45;margin:-5px 0 12px">
+    Drag on this pad and your realme follows in short swipe segments. Because this uses the cloud webhook and the macro has a 1-second trigger guard, updates are throttled to about every 1.25 seconds — not zero-latency mirroring.
+  </p>
+  <div class="grid-2" style="margin-bottom:10px">
+    <button class="btn primary" id="liveToggle" type="button">Enable Live Mode</button>
+    <button class="btn danger disabled" id="liveStop" type="button">Stop Live</button>
+  </div>
+  <div class="canvas-wrap" id="liveCanvasWrap">
+    <canvas id="liveCanvas" style="width:100%;height:190px;display:block;touch-action:none"></canvas>
+    <div class="canvas-hint" id="liveHint">Enable Live Mode, then drag here</div>
+  </div>
+  <div id="liveStatus" style="font-size:.74rem;color:var(--muted);text-align:center;margin-top:6px">Live Mode is off</div>
 </div>
 
 <!-- MULTI-PLATFORM GESTURE STUDIO -->
@@ -782,6 +804,7 @@ const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6
 const COOLDOWN = 2100;
 let locked = false;
 let comboRunning = false;
+let liveDrawing = false;
 
 // ========== CORE ==========
 function v(id) {
@@ -817,7 +840,7 @@ function lockUI(duration = COOLDOWN) {
 }
 
 function send(query) {
-  if (locked || comboRunning) {
+  if (locked || comboRunning || liveDrawing) {
     showToast("Please wait...");
     return;
   }
@@ -864,7 +887,130 @@ function closeModal() {
 
 // ========== MULTI-PLATFORM GESTURE STUDIO ==========
 const $=id=>document.getElementById(id), cv=$('gestureCanvas'), cx=cv.getContext('2d'), sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
 const num=(id,d)=>+$(id).value||d, SW=()=>num('scrW',1272), SH=()=>num('scrH',2800);
+
+// ========== LIVE TOUCH MODE ==========
+// The existing MacroDroid macro accepts SX/SY/EX/EY and performs a 250 ms swipe.
+// Its webhook trigger has a 1-second last-run guard, so keep a safe 1.25 s minimum.
+(function initLiveTouch(){
+  const canvas=$('liveCanvas'), ctx=canvas.getContext('2d'), wrap=$('liveCanvasWrap');
+  const toggle=$('liveToggle'), stop=$('liveStop'), hint=$('liveHint'), status=$('liveStatus');
+  const INTERVAL=1250, MIN_MOVE=7, EDGE=40;
+  let enabled=false, pointer=null, active=false, ending=false, busy=false;
+  let startPoint=null, lastSent=null, pending=null, path=[];
+  let lastDispatch=0, pumpTimer=null, cancelled=false;
+
+  const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
+  function screenPoint(e){
+    const r=canvas.getBoundingClientRect();
+    const nx=clamp((e.clientX-r.left)/r.width,0,1);
+    const ny=clamp((e.clientY-r.top)/r.height,0,1);
+    return {x:Math.round(clamp(nx*SW(),EDGE,SW()-EDGE)),y:Math.round(clamp(ny*SH(),EDGE,SH()-EDGE))};
+  }
+  function dist(a,b){return a&&b?Math.hypot(a.x-b.x,a.y-b.y):0;}
+  function setStatus(msg,kind=''){
+    status.textContent=msg;
+    status.className=kind;
+  }
+  function fit(){
+    const d=window.devicePixelRatio||1,w=canvas.clientWidth||300,h=canvas.clientHeight||190;
+    canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);
+    ctx.setTransform(d,0,0,d,0,0);draw();
+  }
+  function draw(){
+    const w=canvas.clientWidth||300,h=canvas.clientHeight||190;
+    ctx.clearRect(0,0,w,h);
+    if(path.length){
+      ctx.strokeStyle=enabled?'#38bdf8':'#64748b';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
+      ctx.beginPath();
+      path.forEach((p,i)=>{const x=(p.x/SW())*w,y=(p.y/SH())*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+      ctx.stroke();
+      const p=path[path.length-1];ctx.fillStyle='#22c55e';ctx.beginPath();ctx.arc((p.x/SW())*w,(p.y/SH())*h,5,0,Math.PI*2);ctx.fill();
+    }
+    hint.classList.toggle('hidden',enabled&&active);
+    if(enabled&&!active)hint.textContent='Drag slowly here to move on your realme';
+    else if(!enabled)hint.textContent='Enable Live Mode, then drag here';
+  }
+  function finishStroke(){
+    active=false;ending=false;pointer=null;liveDrawing=false;startPoint=null;lastSent=null;pending=null;path=[];
+    if(pumpTimer){clearTimeout(pumpTimer);pumpTimer=null;}
+    draw();
+    if(enabled)setStatus('Ready — drag on the pad','live-active');
+    else setStatus('Live Mode is off');
+  }
+  function schedulePump(){
+    if(busy||pumpTimer||!pending||!lastSent)return;
+    const target=pending;
+    if(dist(lastSent,target)<MIN_MOVE){
+      if(ending)finishStroke();
+      return;
+    }
+    const wait=Math.max(0,INTERVAL-(performance.now()-lastDispatch));
+    pumpTimer=setTimeout(async()=>{
+      pumpTimer=null;
+      if(!pending||!lastSent||cancelled)return;
+      const from=lastSent,to=pending;
+      if(dist(from,to)<MIN_MOVE){if(ending)finishStroke();return;}
+      pending=null;lastSent=to;lastDispatch=performance.now();busy=true;
+      setStatus('Sending movement…','live-active');
+      try{
+        const q=`?SX=${from.x}&SY=${from.y}&EX=${to.x}&EY=${to.y}&ts=${Date.now()}`;
+        await fetch(WEBHOOK+q,{method:'GET',mode:'no-cors',cache:'no-store'});
+        if(enabled)setStatus('Following your finger','live-active');
+      }catch(err){
+        setStatus('Connection failed — check internet','live-error');
+        enabled=false;toggle.textContent='Enable Live Mode';stop.classList.add('disabled');
+        pending=null;ending=false;active=false;pointer=null;liveDrawing=false;path=[];draw();
+      }finally{
+        busy=false;
+        if(pending&&lastSent&&dist(lastSent,pending)>=MIN_MOVE)schedulePump();
+        else if(ending)finishStroke();
+      }
+    },wait);
+  }
+  function cancelStroke(){
+    cancelled=true;active=false;ending=true;pointer=null;pending=null;
+    if(pumpTimer){clearTimeout(pumpTimer);pumpTimer=null;}
+    if(!busy)finishStroke();
+    else setStatus('Stopping after current segment…','live-active');
+  }
+  toggle.addEventListener('click',()=>{
+    if(enabled){enabled=false;cancelStroke();toggle.textContent='Enable Live Mode';stop.classList.add('disabled');setStatus('Live Mode is off');draw();return;}
+    enabled=true;cancelled=false;toggle.textContent='Disable Live Mode';stop.classList.remove('disabled');
+    setStatus('Ready — drag on the pad','live-active');draw();
+  });
+  stop.addEventListener('click',()=>{
+    if(!enabled&&!active)return;
+    enabled=false;cancelStroke();toggle.textContent='Enable Live Mode';stop.classList.add('disabled');
+  });
+  canvas.addEventListener('pointerdown',e=>{
+    if(!enabled||active||busy)return;
+    e.preventDefault();canvas.setPointerCapture(e.pointerId);
+    pointer=e.pointerId;active=true;ending=false;cancelled=false;liveDrawing=true;
+    const p=screenPoint(e);startPoint=p;lastSent=p;pending=null;path=[p];
+    // Wait out the macro's 1-second guard before the first live segment.
+    lastDispatch=performance.now();setStatus('Drag slowly — first update in about 1.25 s','live-active');draw();
+  });
+  canvas.addEventListener('pointermove',e=>{
+    if(!active||e.pointerId!==pointer)return;
+    e.preventDefault();const p=screenPoint(e);pending=p;
+    const prev=path[path.length-1];if(!prev||dist(prev,p)>=2)path.push(p);
+    draw();schedulePump();
+  });
+  function release(e){
+    if(!active||e.pointerId!==pointer)return;
+    e.preventDefault();const p=screenPoint(e);pending=p;
+    const prev=path[path.length-1];if(!prev||dist(prev,p)>=1)path.push(p);
+    active=false;ending=true;setStatus('Finishing last movement…','live-active');draw();schedulePump();
+    if(!busy&&!pumpTimer&&(!pending||!lastSent||dist(lastSent,pending)<MIN_MOVE))finishStroke();
+  }
+  canvas.addEventListener('pointerup',release);
+  canvas.addEventListener('pointercancel',e=>{if(active&&e.pointerId===pointer)cancelStroke();});
+  window.addEventListener('resize',fit);
+  fit();draw();
+})();
+
 let P=[{s:[],w:2000}], cur=0, drawing=null, lastPt=null, stopReq=false, dpr=window.devicePixelRatio||1;
 try{const j=JSON.parse(localStorage.getItem('gs')||'null');
   if(j&&Array.isArray(j.P)&&j.P.length){P=j.P;['scrW','scrH','gapMs','maxSeg'].forEach(k=>{if(j[k])$(k).value=j[k]});if(j.scrW===1080&&j.scrH===2400){$('scrW').value=1272;$('scrH').value=2800;}if(j.gapMs===2800)$('gapMs').value=650;}}catch(e){}
