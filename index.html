@@ -360,9 +360,22 @@ input[type="range"]::-webkit-slider-thumb {
 
 #gestureCanvas {
   width: 100%;
-  height: 220px;
+  height: 100%;
   display: block;
   cursor: crosshair;
+  touch-action: none;
+}
+.canvas-wrap {
+  width: min(100%, 320px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  aspect-ratio: 1272 / 2800;
+  max-height: min(70vh, 600px);
+  border-radius: 32px !important;
+  border: 2.5px solid rgba(148,163,184,0.35) !important;
+  background: #05080f !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05), 0 10px 36px rgba(0,0,0,0.5);
+  overflow: hidden;
 }
 
 .canvas-hint {
@@ -500,7 +513,7 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
     <div class="sub">Remote Device Control</div>
     <div class="status">
       <div class="status-dot"></div>
-      <span id="connStatus">Webhook Ready</span>
+      <span id="connStatus">Webhook Ready · P3 Live</span>
     </div>
   </div>
   <div class="cooldown-bar" id="cooldownBar">
@@ -575,18 +588,18 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 <div class="card">
   <div class="card-title">Multi-Platform Gesture Studio</div>
   <div class="field-row">
-    <div class="field"><label>Screen width px</label><input type="number" id="scrW" value="1080"></div>
-    <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2400"></div>
+    <div class="field"><label>Screen width px</label><input type="number" id="scrW" value="1272"></div>
+    <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2800"></div>
   </div>
   <div class="field-row">
-    <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="650"></div>
-    <div class="field"><label>Max moves per stroke</label><input type="number" id="maxSeg" value="8"></div>
+    <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="400"></div>
+    <div class="field"><label>Max moves per stroke</label><input type="number" id="maxSeg" value="5"></div>
   </div>
   <div class="field-row">
-    <div class="field"><label>Points per stroke</label><input type="number" id="maxPts" value="30"></div>
-    <div class="field"><label>Edge safe margin px</label><input type="number" id="edgeM" value="40"></div>
+    <div class="field"><label>Points per stroke</label><input type="number" id="maxPts" value="14"></div>
+    <div class="field"><label>Edge safe margin px</label><input type="number" id="edgeM" value="0"></div>
   </div>
-  <div class="field"><label>Time per point ms</label><input type="number" id="msPt" value="250"></div>
+  <div class="field"><label>Time per point ms</label><input type="number" id="msPt" value="160"></div>
   <input type="hidden" id="contMode"><input type="hidden" id="smooth" checked>
   <div class="field-row" style="margin-top:4px">
     <div class="field"><label>Live Mode (drag = instant gesture)</label><input type="checkbox" id="liveMode" style="width:24px;height:24px"></div>
@@ -595,7 +608,7 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
   <div class="combo-status" id="comboStatus"><span class="step" id="comboStep"></span> on <span id="comboName"></span></div>
   <div class="canvas-wrap" id="canvasWrap">
     <canvas id="gestureCanvas"></canvas><canvas id="phoneOutline" style="position:absolute;inset:0;pointer-events:none"></canvas><div id="liveDot" style="position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.3);display:none;pointer-events:none"></div>
-    <div class="canvas-hint" id="canvasHint">Draw here. This pad is your phone screen.</div>
+    <div class="canvas-hint" id="canvasHint">P3 Ultra pad · LIVE on = slide controls phone · edge = edge</div>
   </div>
   <div class="grid-3" style="margin-bottom:12px">
     <button class="btn" id="undoBtn">Undo stroke</button>
@@ -781,7 +794,7 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 
 <script>
 const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhookv2";
-const COOLDOWN = 2100;
+const COOLDOWN = 900;
 let locked = false;
 let comboRunning = false;
 
@@ -878,10 +891,17 @@ function dist(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);
 function rdp(p,e){if(p.length<3)return p;let m=0,k=0;const a=p[0],b=p[p.length-1];
   for(let i=1;i<p.length-1;i++){const d=dist(p[i],a,b);if(d>m){m=d;k=i}}
   return m>e?rdp(p.slice(0,k+1),e).slice(0,-1).concat(rdp(p.slice(k),e)):[a,b]}
-function simp(s,MM){const W=SW(),H=SH(),M=Math.max(1,num('maxSeg',8));
-  const M2=MM||($('smooth').checked?Math.max(2,num('maxPts',90))-1:($('contMode').checked?15:M));const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=4,r=rdp(p,e);
-  while(r.length-1>M2&&e<3000){e*=1.4;r=rdp(p,e)}
-  const mg=num('edgeM',40);return r.map(q=>({x:Math.min(W-mg,Math.max(mg,Math.round(q.x))),y:Math.min(H-mg,Math.max(mg,Math.round(q.y)))}))}
+function simp(s,MM){const W=SW(),H=SH(),M=Math.max(1,num('maxSeg',5));
+  const M2=MM||($('smooth').checked?Math.max(2,num('maxPts',14))-1:($('contMode').checked?8:M));
+  const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=12,r=rdp(p,e);
+  while(r.length-1>M2&&e<4000){e*=1.5;r=rdp(p,e)}
+  const mg=Math.max(0,num('edgeM',0)), snap=28;
+  return r.map(q=>{
+    let x=Math.round(q.x), y=Math.round(q.y);
+    if(x<=mg+snap) x=mg; else if(x>=W-mg-snap) x=W-1-mg;
+    if(y<=mg+snap) y=mg; else if(y>=H-mg-snap) y=H-1-mg;
+    return {x:Math.min(W-1-mg,Math.max(mg,x)), y:Math.min(H-1-mg,Math.max(mg,y))};
+  })}
 
 // One webhook query per move. Short strokes become taps.
 function steps(i){const out=[];
@@ -896,34 +916,45 @@ function steps(i){const out=[];
   return out}
 
 // Canvas keeps the same aspect ratio as the phone screen
-function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
   const rr=(x0,y0,ww,hh,rad)=>{x.beginPath();if(x.roundRect)x.roundRect(x0,y0,ww,hh,rad);else x.rect(x0,y0,ww,hh)};
-  // bezel: rounded frame with a soft screen-glow fill, like a real phone resting on the card
   const bez=Math.max(10,Math.min(w,h)*.045), rad=Math.min(w,h)*.11;
   const grad=x.createLinearGradient(0,0,0,h); grad.addColorStop(0,'rgba(56,70,98,.16)'); grad.addColorStop(1,'rgba(20,26,40,.05)');
   rr(bez*.4,bez*.4,w-bez*.8,h-bez*.8,rad); x.fillStyle=grad; x.fill();
-  x.lineWidth=Math.max(2,bez*.35); x.strokeStyle='rgba(148,163,184,.55)'; x.stroke();
-  // inner screen edge, slightly inset
-  rr(bez,bez,w-bez*2,h-bez*2,rad*.6); x.lineWidth=1; x.strokeStyle='rgba(148,163,184,.25)'; x.stroke();
-  // top notch (pill) with a camera dot
-  const nw=Math.min(w*.26,70), nh=Math.max(6,bez*.5);
-  rr(w/2-nw/2,bez*.55,nw,nh,nh/2); x.fillStyle='rgba(15,20,32,.9)'; x.fill(); x.strokeStyle='rgba(148,163,184,.3)'; x.lineWidth=1; x.stroke();
-  x.beginPath(); x.arc(w/2+nw*.28,bez*.55+nh/2,nh*.28,0,7); x.fillStyle='rgba(100,140,220,.5)'; x.fill();
-  // side button bumps (power + volume), purely decorative
-  const bw=Math.max(2,bez*.3), bl=Math.min(h*.06,34);
-  x.fillStyle='rgba(148,163,184,.4)';
-  x.fillRect(w-bez*.3,h*.17,bw,bl*.8);            // power
-  x.fillRect(-bw+bez*.3,h*.12,bw,bl*.6);          // volume up
-  x.fillRect(-bw+bez*.3,h*.12+bl*.8,bw,bl*.6);    // volume down
-  // faint centre crosshair to help judge position, very subtle
-  x.strokeStyle='rgba(148,163,184,.08)'; x.lineWidth=1;
-  x.beginPath(); x.moveTo(w/2,bez*1.6); x.lineTo(w/2,h-bez*1.6); x.moveTo(bez*1.6,h/2); x.lineTo(w-bez*1.6,h/2); x.stroke();
+  x.lineWidth=Math.max(2,bez*.35); x.strokeStyle='rgba(148,163,184,.55)';
+  rr(bez*.4,bez*.4,w-bez*.8,h-bez*.8,rad); x.stroke();
+  // status + punch
+  const top=Math.min(24,h*0.04);
+  x.fillStyle='rgba(148,163,184,0.08)'; x.fillRect(bez,bez,w-bez*2,top);
+  x.fillStyle='rgba(148,163,184,0.5)'; x.beginPath(); x.arc(w/2,bez+top/2,3.2,0,7); x.fill();
+  // nav bar
+  const nav=Math.min(14,h*0.03);
+  x.fillStyle='rgba(148,163,184,0.12)'; x.fillRect(bez,h-bez-nav,w-bez*2,nav);
+  x.fillStyle='rgba(148,163,184,0.4)'; x.fillRect(w/2-18,h-bez-nav/2-1.5,36,3);
+  // EDGE CONTROL LINES — pad edge = phone edge
+  x.lineWidth=3;
+  x.strokeStyle='rgba(59,130,246,0.6)';
+  x.beginPath();x.moveTo(4,top+10);x.lineTo(4,h-nav-10);x.stroke();
+  x.beginPath();x.moveTo(w-4,top+10);x.lineTo(w-4,h-nav-10);x.stroke();
+  x.strokeStyle='rgba(34,197,94,0.55)';
+  x.beginPath();x.moveTo(16,4);x.lineTo(w-16,4);x.stroke();
+  x.beginPath();x.moveTo(16,h-4);x.lineTo(w-16,h-4);x.stroke();
+  // soft guides
+  x.strokeStyle='rgba(59,130,246,0.1)';x.lineWidth=1;x.setLineDash([4,10]);
+  x.beginPath();x.moveTo(w/2,top+6);x.lineTo(w/2,h-nav-4);x.moveTo(8,h/2);x.lineTo(w-8,h/2);x.stroke();
+  x.setLineDash([]);
+  x.fillStyle='rgba(148,163,184,0.4)';x.font='bold 9px sans-serif';
+  x.fillText('TL',10,top+18);x.fillText('TR',w-22,top+18);
+  x.fillText('BL',10,h-nav-8);x.fillText('BR',w-22,h-nav-8);
 }
-function fit(){const W=SW(),H=SH(),w0=$('canvasWrap').clientWidth||300;
-  let w=w0,h=w0*H/W;const cap=Math.max(260,Math.min(520,innerHeight*.55));
-  if(h>cap){h=cap;w=h*W/H}
-  cv.style.width=w+'px';cv.style.height=h+'px';cv.style.margin='0 auto';cv.style.touchAction='none';
-  cv.width=w*dpr;cv.height=h*dpr;draw()}
+function fit(){
+  const wrap=$('canvasWrap'); if(!wrap)return;
+  const w=wrap.clientWidth||280;
+  const h=wrap.clientHeight||Math.round(w*2800/1272);
+  cv.style.width=w+'px'; cv.style.height=h+'px'; cv.style.touchAction='none';
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  draw();
+}
 function draw(){drawOutline();const w=cv.clientWidth,h=cv.clientHeight;
   cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,w,h);
   cx.lineWidth=3;cx.lineCap=cx.lineJoin='round';
@@ -949,19 +980,28 @@ function refresh(){$('platWait').value=P[cur].w;tabs();draw();info();save()}
 const pt=e=>{const r=cv.getBoundingClientRect();
   return{t:e.timeStamp,x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}};
 let liveBusy=false,liveQueue=null;
+function edgeSnapNorm(p){
+  const W=SW(),H=SH(),mg=Math.max(0,num('edgeM',0)),snap=28;
+  let x=Math.round(p.x*W), y=Math.round(p.y*H);
+  if(x<=mg+snap) x=mg; else if(x>=W-mg-snap) x=W-1-mg;
+  if(y<=mg+snap) y=mg; else if(y>=H-mg-snap) y=H-1-mg;
+  return {x:Math.min(W-1-mg,Math.max(mg,x)), y:Math.min(H-1-mg,Math.max(mg,y))};
+}
 function liveFire(a,b){
-  if(liveBusy){liveQueue=[a,b];return}
-  liveBusy=true;
-  const W=SW(),H=SH(),mg=num('edgeM',40);
-  const clampPt=p=>({x:Math.round(Math.min(W-mg,Math.max(mg,p.x*W))),y:Math.round(Math.min(H-mg,Math.max(mg,p.y*H)))});
-  const pa=clampPt(a),pb=clampPt(b);
-  const dur=Math.max(60,Math.min(400,Math.round(Math.hypot(pb.x-pa.x,pb.y-pa.y)*0.5)));
-  $('worker').src=WEBHOOK+'?Tempvar=gesture&path='+pa.x+','+pa.y+';'+pb.x+','+pb.y+'&dur='+dur+'&ts='+Date.now();
-  setTimeout(()=>{liveBusy=false;if(liveQueue){const[q1,q2]=liveQueue;liveQueue=null;liveFire(q1,q2)}},dur+60);
+  // Keep same MDR contract: Tempvar=gesture & path & dur
+  // No liveBusy lock — parallel Image beacons so live is continuous
+  const pa=edgeSnapNorm(a), pb=edgeSnapNorm(b);
+  if(pa.x===pb.x && pa.y===pb.y) return;
+  const dist=Math.hypot(pb.x-pa.x, pb.y-pa.y);
+  const dur=Math.max(50, Math.min(280, Math.round(dist*0.45)));
+  const qs='?Tempvar=gesture&path='+pa.x+','+pa.y+';'+pb.x+','+pb.y+'&dur='+dur+'&ts='+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+  try{ const img=new Image(); img.src=WEBHOOK+qs; }catch(e){
+    try{ $('worker').src=WEBHOOK+qs; }catch(_){}
+  }
 }
 cv.onpointerdown=e=>{if(comboRunning)return;e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pt(e);drawing=[p];if($('liveMode').checked){lastLivePt=p}draw()};
 cv.onpointermove=e=>{const p=pt(e);lastPt=p;const dot=$('liveDot');if(dot){dot.style.left=(p.x*100)+'%';dot.style.top=(p.y*100)+'%';dot.style.display='block'}
-  if($('liveMode').checked&&drawing){if(lastLivePt&&Math.hypot(p.x-lastLivePt.x,p.y-lastLivePt.y)*SW()>8){liveFire(lastLivePt,p);lastLivePt=p}}
+  if($('liveMode').checked&&drawing){if(lastLivePt&&Math.hypot(p.x-lastLivePt.x,p.y-lastLivePt.y)*SW()>5){liveFire(lastLivePt,p);lastLivePt=p}}
   if(drawing){drawing.push(p);draw()}};
 cv.onpointerup=cv.onpointercancel=()=>{if($('liveMode').checked){drawing=null;lastLivePt=null;return}if(drawing){P[cur].s.push(drawing);drawing=null;refresh()}};
 
