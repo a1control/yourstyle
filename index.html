@@ -575,22 +575,20 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 <div class="card">
   <div class="card-title">Multi-Platform Gesture Studio</div>
   <div class="field-row">
-    <div class="field"><label>Screen width px</label><input type="number" id="scrW" value="1272"></div>
-    <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2800"></div>
+    <div class="field"><label>Screen width px</label><input type="number" id="scrW" value="1080"></div>
+    <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2400"></div>
   </div>
   <div class="field-row">
-    <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="650"></div>
+    <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="2800"></div>
     <div class="field"><label>Max moves per stroke</label><input type="number" id="maxSeg" value="8"></div>
   </div>
   <div class="field-row">
+    <div class="field"><label>Chain mode (fast, no Shizuku)</label><input type="checkbox" id="contMode" checked style="width:24px;height:24px"></div>
     <div class="field"><label>Points per stroke</label><input type="number" id="maxPts" value="30"></div>
-    <div class="field"><label>Edge safe margin px</label><input type="number" id="edgeM" value="40"></div>
   </div>
+  <div class="field"><label>Edge safe margin px</label><input type="number" id="edgeM" value="40"></div>
+  <div class="field"><label>Smooth mode (Java, experimental)</label><input type="checkbox" id="smooth" style="width:24px;height:24px"></div>
   <div class="field"><label>Time per point ms</label><input type="number" id="msPt" value="250"></div>
-  <input type="hidden" id="contMode"><input type="hidden" id="smooth" checked>
-  <div class="field-row" style="margin-top:4px">
-    <div class="field"><label>Live Mode (drag = instant gesture)</label><input type="checkbox" id="liveMode" style="width:24px;height:24px"></div>
-  </div>
   <div class="ptabs" id="platTabs"></div>
   <div class="combo-status" id="comboStatus"><span class="step" id="comboStep"></span> on <span id="comboName"></span></div>
   <div class="canvas-wrap" id="canvasWrap">
@@ -619,10 +617,7 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
     <label>Speak Text</label>
     <input type="text" id="speak" placeholder="What to speak">
   </div>
-  <div class="grid-2" style="margin-bottom:12px">
-    <button class="btn primary" onclick="send('?speak='+v('speak')+'&Tempvar=speak')">Speak</button>
-    <button class="btn" onclick="send('?Tempvar=speakapp')">Say current app running (now)</button>
-  </div>
+  <button class="btn primary" style="width:100%;margin-bottom:12px" onclick="send('?speak='+v('speak')+'&Tempvar=speak')">Speak</button>
 
   <div class="field">
     <label>Toast Message</label>
@@ -712,8 +707,6 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
     <div class="btn" data-action="?Tempvar=takephoto">Selfie</div>
     <div class="btn" data-action="?Tempvar=htspton">Hotspot On</div>
     <div class="btn" data-action="?Tempvar=htsptoff">Hotspot Off</div>
-    <div class="btn" data-action="?Tempvar=dataon">Mobile Data On</div>
-    <div class="btn" data-action="?Tempvar=dataoff">Mobile Data Off</div>
     <div class="btn" data-action="?Tempvar=fullvolume">Full Vol</div>
   </div>
 </div>
@@ -780,7 +773,8 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 <iframe id="worker" style="display:none;width:0;height:0"></iframe>
 
 <script>
-const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhookv2";
+const WEBHOOK = "https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/enableswebhook";
+const WEBHOOK2 = 'https://trigger.macrodroid.com/bfd068ea-cfc7-4b57-989d-0a3dc2c6a7c9/camringwebhook';
 const COOLDOWN = 2100;
 let locked = false;
 let comboRunning = false;
@@ -866,11 +860,11 @@ function closeModal() {
 
 // ========== MULTI-PLATFORM GESTURE STUDIO ==========
 const $=id=>document.getElementById(id), cv=$('gestureCanvas'), cx=cv.getContext('2d'), sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const num=(id,d)=>+$(id).value||d, SW=()=>num('scrW',1272), SH=()=>num('scrH',2800);
-let P=[{s:[],w:2000}], cur=0, drawing=null, lastPt=null, lastLivePt=null, stopReq=false, dpr=window.devicePixelRatio||1;
+const num=(id,d)=>+$(id).value||d, SW=()=>num('scrW',1080), SH=()=>num('scrH',2400);
+let P=[{s:[],w:2000}], cur=0, drawing=null, lastPt=null, stopReq=false, dpr=window.devicePixelRatio||1;
 try{const j=JSON.parse(localStorage.getItem('gs')||'null');
-  if(j&&Array.isArray(j.P)&&j.P.length){P=j.P;['scrW','scrH','gapMs','maxSeg'].forEach(k=>{if(j[k])$(k).value=j[k]});if(j.scrW===1080&&j.scrH===2400){$('scrW').value=1272;$('scrH').value=2800;}if(j.gapMs===2800)$('gapMs').value=650;}}catch(e){}
-function save(){try{localStorage.setItem('gs',JSON.stringify({P,scrW:SW(),scrH:SH(),gapMs:num('gapMs',650),maxSeg:num('maxSeg',8)}))}catch(e){}}
+  if(j&&Array.isArray(j.P)&&j.P.length){P=j.P;['scrW','scrH','gapMs','maxSeg'].forEach(k=>{if(j[k])$(k).value=j[k]})}}catch(e){}
+function save(){try{localStorage.setItem('gs',JSON.stringify({P,scrW:SW(),scrH:SH(),gapMs:num('gapMs',2800),maxSeg:num('maxSeg',8)}))}catch(e){}}
 
 // Simplify a stroke (Ramer-Douglas-Peucker) in real screen pixels
 function dist(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);
@@ -879,7 +873,7 @@ function rdp(p,e){if(p.length<3)return p;let m=0,k=0;const a=p[0],b=p[p.length-1
   for(let i=1;i<p.length-1;i++){const d=dist(p[i],a,b);if(d>m){m=d;k=i}}
   return m>e?rdp(p.slice(0,k+1),e).slice(0,-1).concat(rdp(p.slice(k),e)):[a,b]}
 function simp(s,MM){const W=SW(),H=SH(),M=Math.max(1,num('maxSeg',8));
-  const M2=MM||($('smooth').checked?Math.max(2,num('maxPts',90))-1:($('contMode').checked?15:M));const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=4,r=rdp(p,e);
+  const M2=MM||($('smooth').checked?Math.max(2,num('maxPts',30))-1:($('contMode').checked?15:M));const p=s.map(q=>({x:q.x*W,y:q.y*H}));let e=4,r=rdp(p,e);
   while(r.length-1>M2&&e<3000){e*=1.4;r=rdp(p,e)}
   const mg=num('edgeM',40);return r.map(q=>({x:Math.min(W-mg,Math.max(mg,Math.round(q.x))),y:Math.min(H-mg,Math.max(mg,Math.round(q.y)))}))}
 
@@ -896,32 +890,9 @@ function steps(i){const out=[];
   return out}
 
 // Canvas keeps the same aspect ratio as the phone screen
-function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
-  const rr=(x0,y0,ww,hh,rad)=>{x.beginPath();if(x.roundRect)x.roundRect(x0,y0,ww,hh,rad);else x.rect(x0,y0,ww,hh)};
-  // bezel: rounded frame with a soft screen-glow fill, like a real phone resting on the card
-  const bez=Math.max(10,Math.min(w,h)*.045), rad=Math.min(w,h)*.11;
-  const grad=x.createLinearGradient(0,0,0,h); grad.addColorStop(0,'rgba(56,70,98,.16)'); grad.addColorStop(1,'rgba(20,26,40,.05)');
-  rr(bez*.4,bez*.4,w-bez*.8,h-bez*.8,rad); x.fillStyle=grad; x.fill();
-  x.lineWidth=Math.max(2,bez*.35); x.strokeStyle='rgba(148,163,184,.55)'; x.stroke();
-  // inner screen edge, slightly inset
-  rr(bez,bez,w-bez*2,h-bez*2,rad*.6); x.lineWidth=1; x.strokeStyle='rgba(148,163,184,.25)'; x.stroke();
-  // top notch (pill) with a camera dot
-  const nw=Math.min(w*.26,70), nh=Math.max(6,bez*.5);
-  rr(w/2-nw/2,bez*.55,nw,nh,nh/2); x.fillStyle='rgba(15,20,32,.9)'; x.fill(); x.strokeStyle='rgba(148,163,184,.3)'; x.lineWidth=1; x.stroke();
-  x.beginPath(); x.arc(w/2+nw*.28,bez*.55+nh/2,nh*.28,0,7); x.fillStyle='rgba(100,140,220,.5)'; x.fill();
-  // side button bumps (power + volume), purely decorative
-  const bw=Math.max(2,bez*.3), bl=Math.min(h*.06,34);
-  x.fillStyle='rgba(148,163,184,.4)';
-  x.fillRect(w-bez*.3,h*.17,bw,bl*.8);            // power
-  x.fillRect(-bw+bez*.3,h*.12,bw,bl*.6);          // volume up
-  x.fillRect(-bw+bez*.3,h*.12+bl*.8,bw,bl*.6);    // volume down
-  // faint centre crosshair to help judge position, very subtle
-  x.strokeStyle='rgba(148,163,184,.08)'; x.lineWidth=1;
-  x.beginPath(); x.moveTo(w/2,bez*1.6); x.lineTo(w/2,h-bez*1.6); x.moveTo(bez*1.6,h/2); x.lineTo(w-bez*1.6,h/2); x.stroke();
-}
+function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);x.strokeStyle='rgba(148,163,184,.35)';x.lineWidth=2;const r=Math.min(w,h)*.08;x.beginPath();if(x.roundRect)x.roundRect(3,3,w-6,h-6,r);else x.rect(3,3,w-6,h-6);x.stroke();x.fillStyle='rgba(148,163,184,.5)';x.fillRect(w/2-14,5,28,4);x.beginPath();x.arc(w/2,h-10,4,0,7);x.fill()}
 function fit(){const W=SW(),H=SH(),w0=$('canvasWrap').clientWidth||300;
-  let w=w0,h=w0*H/W;const cap=Math.max(260,Math.min(520,innerHeight*.55));
-  if(h>cap){h=cap;w=h*W/H}
+  let w=w0,h=Math.min(w0*H/W,innerHeight*.75);
   cv.style.width=w+'px';cv.style.height=h+'px';cv.style.margin='0 auto';cv.style.touchAction='none';
   cv.width=w*dpr;cv.height=h*dpr;draw()}
 function draw(){drawOutline();const w=cv.clientWidth,h=cv.clientHeight;
@@ -940,7 +911,7 @@ function tabs(){const t=$('platTabs');t.innerHTML='';
   const a=document.createElement('div');a.className='ptab';a.textContent='+ Add platform';
   a.onclick=()=>{if(comboRunning)return;P.push({s:[],w:2000});cur=P.length-1;refresh()};t.appendChild(a)}
 const ptT=q=>q.startsWith('?Tempvar=gesture')?Math.max(+q.match(/dur=(\d+)/)[1],((q.match(/PX\d+=/g)||[]).length-1)*num('msPt',250)):q.startsWith('?sd=')?(q.split('&').length/2-1)*num('msPt',250):0;
-function info(){let m=0,t=0;const g=Math.max(550,num('gapMs',650));
+function info(){let m=0,t=0;const g=Math.max(2100,num('gapMs',2800));
   P.forEach((p,i)=>{const st=steps(i);m+=st.length;t+=st.reduce((a,q)=>a+g+ptT(q),0)+(st.length?p.w:0)});
   $('seqInfo').textContent=`${m} moves in total, about ${Math.round(t/1000)} seconds`}
 function refresh(){$('platWait').value=P[cur].w;tabs();draw();info();save()}
@@ -948,22 +919,9 @@ function refresh(){$('platWait').value=P[cur].w;tabs();draw();info();save()}
 // Drawing (mouse + touch)
 const pt=e=>{const r=cv.getBoundingClientRect();
   return{t:e.timeStamp,x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}};
-let liveBusy=false,liveQueue=null;
-function liveFire(a,b){
-  if(liveBusy){liveQueue=[a,b];return}
-  liveBusy=true;
-  const W=SW(),H=SH(),mg=num('edgeM',40);
-  const clampPt=p=>({x:Math.round(Math.min(W-mg,Math.max(mg,p.x*W))),y:Math.round(Math.min(H-mg,Math.max(mg,p.y*H)))});
-  const pa=clampPt(a),pb=clampPt(b);
-  const dur=Math.max(60,Math.min(400,Math.round(Math.hypot(pb.x-pa.x,pb.y-pa.y)*0.5)));
-  $('worker').src=WEBHOOK+'?Tempvar=gesture&path='+pa.x+','+pa.y+';'+pb.x+','+pb.y+'&dur='+dur+'&ts='+Date.now();
-  setTimeout(()=>{liveBusy=false;if(liveQueue){const[q1,q2]=liveQueue;liveQueue=null;liveFire(q1,q2)}},dur+60);
-}
-cv.onpointerdown=e=>{if(comboRunning)return;e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pt(e);drawing=[p];if($('liveMode').checked){lastLivePt=p}draw()};
-cv.onpointermove=e=>{const p=pt(e);lastPt=p;const dot=$('liveDot');if(dot){dot.style.left=(p.x*100)+'%';dot.style.top=(p.y*100)+'%';dot.style.display='block'}
-  if($('liveMode').checked&&drawing){if(lastLivePt&&Math.hypot(p.x-lastLivePt.x,p.y-lastLivePt.y)*SW()>8){liveFire(lastLivePt,p);lastLivePt=p}}
-  if(drawing){drawing.push(p);draw()}};
-cv.onpointerup=cv.onpointercancel=()=>{if($('liveMode').checked){drawing=null;lastLivePt=null;return}if(drawing){P[cur].s.push(drawing);drawing=null;refresh()}};
+cv.onpointerdown=e=>{if(comboRunning)return;e.preventDefault();cv.setPointerCapture(e.pointerId);drawing=[pt(e)];draw()};
+cv.onpointermove=e=>{const p=pt(e);lastPt=p;const dot=$('liveDot');if(dot){dot.style.left=(p.x*100)+'%';dot.style.top=(p.y*100)+'%';dot.style.display='block'}if(drawing){drawing.push(p);draw()}};
+cv.onpointerup=cv.onpointercancel=()=>{if(drawing){P[cur].s.push(drawing);drawing=null;refresh()}};
 
 $('undoBtn').onclick=()=>{P[cur].s.pop();refresh()};
 $('clearBtn').onclick=()=>{P[cur].s=[];refresh()};
@@ -981,7 +939,7 @@ async function exec(ids){
   if(locked||comboRunning){showToast('Please wait...');return}
   const items=ids.map(i=>({i,q:steps(i)})),total=items.reduce((a,b)=>a+b.q.length,0);
   if(!total){showToast('Draw something first');return}
-  const gap=Math.max(550,num('gapMs',650)),st=$('comboStatus');let n=0;
+  const gap=Math.max(2100,num('gapMs',2800)),st=$('comboStatus');let n=0;
   comboRunning=true;stopReq=false;st.classList.add('active');
   document.querySelectorAll('.btn').forEach(b=>b.classList.add('disabled'));
   $('stopBtn').classList.remove('disabled');
@@ -997,7 +955,7 @@ async function exec(ids){
   document.querySelectorAll('.btn').forEach(b=>b.classList.remove('disabled'));
   showToast(stopReq?'Stopped':'Sequence complete')}
 
-const SIMPLE=[["volup", "Volume +", "Volume"], ["voldown", "Volume -", "Volume"], ["screenon", "Screen on", "Screen"], ["screenoff", "Screen off", "Screen"], ["rotateon", "Rotate on", "Screen"], ["rotateoff", "Rotate off", "Screen"], ["awakeon", "Keep awake on", "Screen"], ["awakeoff", "Keep awake off", "Screen"], ["rearphoto", "Rear photo", "Camera and light"], ["vibA", "Vibrate 1", "Device"], ["vibB", "Vibrate 2", "Device"], ["vibC", "Vibrate 3", "Device"], ["vibD", "Vibrate 4", "Device"], ["edgelight", "Edge light", "Device"], ["clearnoti", "Clear notifications", "Device"], ["saytime", "Say time", "Speak"], ["saybattery", "Say battery", "Speak"], ["rejectcall", "Reject call", "Phone"], ],APPS=[["wa", "WhatsApp", "whatsapp whatsapp watsapp whatsap"], ["wab", "WhatsApp Business", "whatsapp business business wab"], ["ig", "Instagram", "instagram insta ig"], ["yt", "YouTube", "youtube youtube"], ["ytr", "YouTube ReVanced", "youtube revanced revanced vanced"], ["chrome", "Chrome", "chrome "], ["brave", "Brave", "brave brave browser"], ["tg", "Telegram", "telegram tele"], ["dc", "Discord", "discord "], ["gmail", "Gmail", "gmail mail email"], ["drive", "Drive", "drive google drive"], ["photos", "Photos", "photos google photos gallery"], ["maps", "Maps", "maps google maps map"], ["play", "Play Store", "play store playstore store"], ["phonepe", "PhonePe", "phonepe "], ["google", "Google", "google search"], ["settings", "Settings", "settings setting"], ["macrodroid", "MacroDroid", "macrodroid macro droid"], ["mx", "MX Player", "mx player "], ["lastwave", "LastWave", "lastwave last wave music"], ["shizuku", "Shizuku", "shizuku "], ["chatgpt", "ChatGPT", "chatgpt "], ["claude", "Claude", "claude "], ["gemini", "Gemini", "gemini "], ["grok", "Grok", "grok "], ["capcut", "CapCut", "capcut "], ["picsart", "Picsart", "picsart "], ["soundcloud", "SoundCloud", "soundcloud "], ["termux", "Termux", "termux "], ["zarchiver", "ZArchiver", "zarchiver "], ["translate", "Translate", "translate "], ["mt", "MT Manager", "mt manager "], ["island", "Island", "island "]],PL=[["lastwave","LastWave"],["uni","Universal (any player)"]],MACS=["Music player animation", "♾️ Infinite Clipboard 📋", "Dash notification tile controller", "Max charging speed", "Auto", "Internet 5g changer", "Pause music", "Chrome ani", "Leave me to complete my charge", "Edge light controller", "Temp maintenance warning", "🏃 Run Macros with Voice Commands 🗣️", "Advanced Instagram Downloader Public V1.0", "Smart torch \" on \" dim light .", "Shake Torch", "VÈ", "Restore to normal - of prevent", "Clipboard Manager ✌🏻", "Camera animation ring", "Volume change when you do work with song", "Intruder Photo + Fake Shutdown", "FloatingTextVarChange(search page for text)", "Take rear pic via sms", "Lock your device by sms from any no.", "Prevent 2", "Find your phone by location/sound", "Flip and lock", "For reference", "Folder picker", "Helper in play music", "V2", "Mobile Guard - Updated", "Count charging time", "Motivation", "Dash notification", "Temperature shown by  swipe top left", "Clear Dictionary", "Pin/Unpin Selection", "No tap : Bend & Control 🔀", "Clipboard Manager 📜", "Find closest match (array)", "Speak Caller Name in Headphones", "Music temporarily paused 🔇", "Volume buttons = Camera 📷", "OTP Code Copy", "🔍 Search Page For Text 📃", "Ani torch", "NO Instagram Scrolling V1", "Restore dim", "Private DNS Quick Setting", "Generate View", "Clear notification", "🎱 Pool Shark (Billiards game) 🦈", "Prevent from unknown action", "FAHHHHH", "Red widget", "Take selfie via sms", "Telegram Specific Chat Lock", "Torch light v1.0", "Get macro list new", "4G Changer", "Look up my macros", "Bt device connected to Spotify or etc (AUTO)", "💾 Floating Ram/Temp🌡", "Amination  camera", "Force TO CHARGE PHONE Fix", "Full charge attention", "Animination headphone", "🏓 Pong Classic ✨️v2", "Ani whatsapp", "Y", "Unlock animation", "🪙 Coin Flipper 🐬", "Internet Enable/Disable noroot – updated", "shake to torch", "Control Device Remotely by Website", "Animation music player", "No Swiping 🚫👆🚫", "🛡️Theft protection🛡️", "Notification edge style", "Instagram Downloader ⛔ V2", "🔋 Bypass Battery - Pass_Through (Updated)", "App Guardian 🛡️", "Viewpoints personal", "Google Assistant", "🏓 Pong Classic ✨️", "Extra dim v2"];
+const SIMPLE=[["volup", "Volume +", "Volume"], ["voldown", "Volume -", "Volume"], ["screenon", "Screen on", "Screen"], ["screenoff", "Screen off", "Screen"], ["rotateon", "Rotate on", "Screen"], ["rotateoff", "Rotate off", "Screen"], ["awakeon", "Keep awake on", "Screen"], ["awakeoff", "Keep awake off", "Screen"], ["rearphoto", "Rear photo", "Camera and light"], ["vibA", "Vibrate 1", "Device"], ["vibB", "Vibrate 2", "Device"], ["vibC", "Vibrate 3", "Device"], ["vibD", "Vibrate 4", "Device"], ["edgelight", "Edge light", "Device"], ["clearnoti", "Clear notifications", "Device"], ["saytime", "Say time", "Speak"], ["saybattery", "Say battery", "Speak"], ["rejectcall", "Reject call", "Phone"], ],APPS=[["wa", "WhatsApp", "whatsapp whatsapp watsapp whatsap"], ["wab", "WhatsApp Business", "whatsapp business business wab"], ["ig", "Instagram", "instagram insta ig"], ["yt", "YouTube", "youtube youtube"], ["ytr", "YouTube ReVanced", "youtube revanced revanced vanced"], ["chrome", "Chrome", "chrome "], ["brave", "Brave", "brave brave browser"], ["tg", "Telegram", "telegram tele"], ["dc", "Discord", "discord "], ["gmail", "Gmail", "gmail mail email"], ["drive", "Drive", "drive google drive"], ["photos", "Photos", "photos google photos gallery"], ["maps", "Maps", "maps google maps map"], ["play", "Play Store", "play store playstore store"], ["phonepe", "PhonePe", "phonepe "], ["google", "Google", "google search"], ["settings", "Settings", "settings setting"], ["macrodroid", "MacroDroid", "macrodroid macro droid"], ["mx", "MX Player", "mx player "], ["lastwave", "LastWave", "lastwave last wave music"], ["shizuku", "Shizuku", "shizuku "], ["chatgpt", "ChatGPT", "chatgpt "], ["claude", "Claude", "claude "], ["gemini", "Gemini", "gemini "], ["grok", "Grok", "grok "], ["capcut", "CapCut", "capcut "], ["picsart", "Picsart", "picsart "], ["soundcloud", "SoundCloud", "soundcloud "], ["termux", "Termux", "termux "], ["zarchiver", "ZArchiver", "zarchiver "], ["translate", "Translate", "translate "], ["mt", "MT Manager", "mt manager "], ["island", "Island", "island "]],PL=[["lastwave","LastWave"],["uni","Universal (any player)"]],MACS=["♾️ Infinite Clipboard 📋", "Music temporarily paused 🔇", "Volume buttons = Camera 📷", "Dash notification tile controller", "Max charging speed", "Auto", "Internet 5g changer", "🔍 Search Page For Text 📃", "Ani torch", "Rapird", "NO Instagram Scrolling V1", "Restore dim", "Private DNS Quick Setting", "Pause music", "Clear notification", "Generate View", "🎱 Pool Shark (Billiards game) 🦈", "Prevent from unknown action", "FAHHHHH", "Chrome ani", "Red widget", "Take selfie via sms", "Leave me to complete my charge", "Edge light controller", "Temp maintenance warning", "🏃 Run Macros with Voice Commands 🗣️", "Torch light v1.0", "Advanced Instagram Downloader Public V1.0", "Smart torch \" on \" dim light .", "Shake Torch", "Get macro list new", "VÈ", "Restore to normal - of prevent", "Look up my macros", "4G Changer", "Bt device connected to Spotify or etc (AUTO)", "💾 Floating Ram/Temp🌡", "Clipboard Manager ✌🏻", "Amination  camera", "Full charge attention", "Force TO CHARGE PHONE Fix", "Volume change when you do work with song", "Animination headphone", "🏓 Pong Classic ✨️v2", "Ani whatsapp", "Y", "Unlock animation", "Intruder Photo + Fake Shutdown", "🪙 Coin Flipper 🐬", "H", "FloatingTextVarChange(search page for text)", "shake to torch", "Animation music player", "No Swiping 🚫👆🚫", "🛡️Theft protection🛡️", "Take rear pic via sms", "Lock your device by sms from any no.", "Prevent 2", "Find your phone by location/sound", "Notification edge style", "Instagram Downloader ⛔ V2", "Flip and lock", "🔋 Bypass Battery - Pass_Through (Updated)", "App Guardian 🛡️", "Viewpoints personal", "Folder picker", "Helper in play music", "V2", "Google Assistant", "Mobile Guard - Updated", "Count charging time", "M", "Ff", "Dash notification", "🏓 Pong Classic ✨️", "Temperature shown by  swipe top left", "Clear Dictionary", "Pin/Unpin Selection", "Extra dim v2", "No tap : Bend & Control 🔀", "Clipboard Manager 📜", "Find closest match (array)"];
 const nz=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'');
 function lev(a,b){const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]==b[j-1]?0:1));p=t}}return d[b.length]}
 function best(q,items){q=nz(q);let r=null,bs=9;items.forEach(([id,name,al])=>{(al||name).toLowerCase().split(/\s+/).concat([nz(name)]).forEach(w=>{w=nz(w);if(!w)return;const s=(w.includes(q)||q.includes(w))&&q.length>=3?0.1*Math.abs(w.length-q.length)/w.length:lev(q,w)/Math.max(q.length,w.length);if(s<bs){bs=s;r=[id,name]}})});return bs<=.45?r:null}
@@ -1014,69 +972,25 @@ title('Media');const pg=E('div','field');pg.innerHTML='<label>Player</label><sel
 let g=grid();btn(g,'Previous',()=>send('?Tempvar=mediakey&mk=88'));btn(g,'Next',()=>send('?Tempvar=mediakey&mk=87'));btn(g,'Stop',()=>send('?Tempvar=mediakey&mk=86'));[['Play/Pause','pp',85],['Play','play',126],['Pause','pause',127]].forEach(([l,k,c])=>btn(g,l,()=>{const p=$('pl').value;send(p=='uni'?'?Tempvar=mediakey&mk='+c:'?Tempvar=m_'+p+'_'+k)}));
 g=grid();btn(g,'« 10s',()=>send('?Tempvar=seekbwd'));btn(g,'10s »',()=>send('?Tempvar=seekfwd'));
 title('Play audio by name');const au=inp('song name','Audio file name');g=E('div','grid-2');root.appendChild(g);btn(g,'Play',()=>{if(au.value.trim())send('?Tempvar=playaudio&p1='+enc(au.value.trim()))},'primary');btn(g,'Stop',()=>send('?Tempvar=stopaudio'),'danger');
-title('Volume');
-const volumeMemory={vol:50,rvol:50,avol:50};
-[['Media','setvol_media','vol'],['Ring','setvol_ring','rvol'],['Alarm','setvol_alarm','avol']].forEach(([l,k,vn])=>{
-  const w=E('div','slider-wrap');
-  w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">50</div></div><input type="range" min="0" max="100" value="50">';
-  const r=w.querySelector('input'),v=w.querySelector('.slider-value');
-  const apply=value=>{const n=Math.max(0,Math.min(100,Math.round(value)));r.value=n;v.textContent=n;if(n>0)volumeMemory[vn]=n;send('?Tempvar='+k+'&'+vn+'='+n)};
-  let unmuteBtn;
-  r.oninput=()=>{v.textContent=r.value;if(+r.value>0)volumeMemory[vn]=+r.value;if(unmuteBtn)unmuteBtn.textContent='Unmute ('+(volumeMemory[vn]||50)+'%)'};
-  r.onchange=()=>send('?Tempvar='+k+'&'+vn+'='+r.value);
-  root.appendChild(w);
-  const controls=E('div','grid-2');root.appendChild(controls);
-  btn(controls,'Mute',()=>apply(0),'danger');
-  unmuteBtn=btn(controls,'Unmute ('+(volumeMemory[vn]||50)+'%)',()=>apply(volumeMemory[vn]||50),'primary');
-});
-g=grid();btn(g,'Mute All',()=>send('?Tempvar=muteall'),'danger');btn(g,'Total Unmute (50%)',()=>send('?Tempvar=unmuteall'),'primary');
+title('Volume');[['Media','setvol_media','vol'],['Ring','setvol_ring','rvol'],['Alarm','setvol_alarm','avol']].forEach(([l,k,vn])=>{const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">50</div></div><input type="range" min="0" max="100" value="50">';const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>v.textContent=r.value;r.onchange=()=>send('?Tempvar='+k+'&'+vn+'='+r.value);root.appendChild(w)});
 g=grid();btn(g,'Volume +',()=>send('?Tempvar=volup'));btn(g,'Volume -',()=>send('?Tempvar=voldown'));
-title('WhatsApp');const wf=E('div','field');wf.innerHTML='<label>Account</label><select id="wacc" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px"><option value="wa">WhatsApp</option><option value="wab">WhatsApp Business</option></select>';root.appendChild(wf);
-const waCC=document.createElement('select');waCC.style.cssText='width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px;margin-bottom:10px';
-[['91','India +91'],['1','USA/Canada +1'],['44','UK +44'],['971','UAE +971'],['61','Australia +61']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;waCC.appendChild(o)});
-root.appendChild(waCC);
-const wn=inp('phone number (no country code)','Number'),wm=inp('Message','Message');
-const waFull=()=>waCC.value+wn.value.replace(/\D/g,'');
-const waDelayWrap=E('div','field');waDelayWrap.innerHTML='<label>Send tap delay: <strong id="waDelayLabel">2 seconds</strong></label><input id="waDelay" type="range" min="1" max="4" step="1" value="2" style="width:100%"><small style="color:var(--muted)">Default 2s. Increase only if WhatsApp has not finished opening.</small>';root.appendChild(waDelayWrap);$('waDelay').oninput=()=>{$('waDelayLabel').textContent=$('waDelay').value+' seconds'};g=E('div','grid-2');root.appendChild(g);
-const waSendQuery=mode=>'?Tempvar='+$('wacc').value+'_'+mode+'&p1='+enc(waFull())+'&p2='+enc(wm.value)+'&waDelay='+$('waDelay').value;
-btn(g,'Open chat',()=>send(waSendQuery('open')));btn(g,'Send now',()=>send(waSendQuery('send')),'primary');
-title('One-click call');
-const ccDrop=document.createElement('select');ccDrop.style.cssText='width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px;margin-bottom:10px';
-[['+91','India +91'],['+1','USA/Canada +1'],['+44','UK +44'],['+971','UAE +971'],['+61','Australia +61'],['+880','Bangladesh +880'],['+92','Pakistan +92'],['+65','Singapore +65'],['+966','Saudi Arabia +966'],['+974','Qatar +974']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;ccDrop.appendChild(o)});
-root.appendChild(ccDrop);
-const cn=inp('phone number (no country code)','Number');
-btn(root,'Call now',()=>{const num=cn.value.replace(/\D/g,'');if(!num){showToast('Enter a number');return}const full=ccDrop.value+num;if(!confirm('Call '+full+' ?'))return;send('?Tempvar=makecall&p1='+encodeURIComponent(full))},'primary');
-title('Animation & Edge light');g=E('div','grid-2');root.appendChild(g);
-btn(g,'Loading animation',()=>send('?Tempvar=animplay'),'primary');btn(g,'Stop animation',()=>send('?Tempvar=animstop'),'danger');
-[['anim_money','Money'],['anim_fireworks','Fireworks'],['anim_rain','Rain'],['anim_fire','Fire']].forEach(([k,l])=>btn(g,l,()=>send('?Tempvar='+k)));
-const elc=document.createElement('input');elc.type='color';elc.value='#22d3ee';elc.style.cssText='width:56px;height:44px;border:none;border-radius:10px;background:none;margin:8px 0';root.appendChild(elc);
-btn(root,'Flash edge light (selected colour)',()=>send('?Tempvar=edgecolor&p1='+elc.value.replace('#','')),'primary');
-title('Screen text (OCR)');
-btn(root,'Read screen \u2192 copy to clipboard',()=>send('?Tempvar=ocrscreen'),'primary');
-const ocrw=inp('word to look for','Search for');
-btn(root,'Is this word on screen?',()=>{if(ocrw.value.trim())send('?Tempvar=ocrfind&p1='+enc(ocrw.value.trim()))});
-title('Last photo');g=E('div','grid-2');root.appendChild(g);
-btn(g,'Open (ZArchiver \u2192 Gallery)',()=>send('?Tempvar=openlastpic'),'primary');
-btn(g,'Email it',()=>send('?Tempvar=sharelastphoto'));
-title('Send SMS to any number');const smn=inp('919876543210','Number (with country code)'),smm=inp('Message','Message text');
-btn(root,'Send SMS',()=>{const num=smn.value.replace(/\D/g,'');if(!num||!smm.value.trim()){showToast('Enter number and message');return}send('?Tempvar=sendsms&p1='+encodeURIComponent(num)+'&p2='+encodeURIComponent(smm.value))},'primary');
+title('WhatsApp');const wf=E('div','field');wf.innerHTML='<label>Account</label><select id="wacc" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px"><option value="wa">WhatsApp</option><option value="wab">WhatsApp Business</option></select>';root.appendChild(wf);const wn=inp('919876543210 (country code, no +)','Number'),wm=inp('Message','Message');g=E('div','grid-2');root.appendChild(g);
+btn(g,'Open chat',()=>send('?Tempvar='+$('wacc').value+'_open&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)));btn(g,'Send now',()=>send('?Tempvar='+$('wacc').value+'_send&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)),'primary');
 title('Phone');const pn=inp('Number','Number or SMS text');g=E('div','grid-3');root.appendChild(g);
 btn(g,'Open dialer',()=>send('?Tempvar=opendialer&p1='+enc(pn.value)));btn(g,'SMS draft',()=>send('?Tempvar=opensms&p1='+enc(pn.value)+'&p2='+enc(wm.value)));btn(g,'Reject call',()=>send('?Tempvar=rejectcall'),'danger');
 title('Touch lock');let on=false;const tb=btn(root,'Block touches: OFF',()=>{on=!on;tb.textContent='Block touches: '+(on?'ON':'OFF');send('?Tempvar='+(on?'blockon':'blockoff'))},'primary');
+title('Close an app');const ca=inp('app name, or "all apps"','App to close');g=E('div','grid-2');root.appendChild(g);btn(g,'Close app',()=>{if(ca.value.trim())send('?Tempvar=closeapp&p1='+enc(ca.value.trim()))},'danger');btn(g,'Open its App Info',()=>{if(ca.value.trim())send('?Tempvar=appinfo&p1='+enc(ca.value.trim()))});
 title('Run a macro (typos are fine)');const mi=inp('macro name','Macro');
 btn(root,'Run macro',()=>{const v=mi.value.trim();if(!v)return;const r=best(v,MACS.map(n=>[n,n,'']))||[v,v];showToast('Running '+r[1]);send('?Tempvar=runmacro&p1='+enc(r[1]))},'primary');
 title('Web and clipboard');const ui=inp('https://...','Website or text');g=E('div','grid-2');root.appendChild(g);
 btn(g,'Open website',()=>send('?Tempvar=openurl&p1='+enc(ui.value)));btn(g,'Set clipboard',()=>send('?Tempvar=setclip&p1='+enc(ui.value)));
 title('Quick access');g=grid();[['Quick settings',5],['Power menu',6],['Screenshot (system)',9]].forEach(([l,n])=>btn(g,l,()=>send('?Tempvar=global&ga='+n)));btn(g,'Screenshot',()=>send('?Tempvar=ss'));
 title('Location');g=grid();btn(g,'Update location',()=>send('?Tempvar=updateloc'));const le=inp('you@gmail.com','Share location to (email)');btn(root,'Update and share location',()=>{if(le.value.trim())send('?Tempvar=shareloc&p1='+enc(le.value.trim()))},'primary');
-title('Record');g=grid();[15,30,60,120,300].forEach(n=>btn(g,'Mic '+n+'s',()=>send('?Tempvar=recmic'+n)));
-g=grid();btn(g,'Rear video · Start',()=>send('?Tempvar=video_rear'),'primary');btn(g,'Selfie video · Start',()=>send('?Tempvar=video_selfie'),'primary');
-g=grid();btn(g,'Stop video',()=>send('?Tempvar=video_stop'),'danger');
-const videoNote=E('div','field');videoNote.textContent='Recording continues until you tap Stop video. Saves to DCIM/macrodriodhidden.';videoNote.style.cssText='font-size:.72rem;color:var(--muted);margin-top:4px';root.appendChild(videoNote);
+title('Record');g=grid();[15,30,60,120,300].forEach(n=>btn(g,'Mic '+n+'s',()=>send('?Tempvar=recmic'+n)));[['Video rear','Rec Video Rear'],['Video selfie','Rec Video Selfie'],['Stop video','Stop Video']].forEach(([l,n])=>btn(g,l,()=>send('?Tempvar=runmacro&p1='+enc(n))));
 title('Camera ring overlay');
 const rc=document.createElement('input');rc.type='color';rc.value='#ff2d55';rc.style.cssText='width:56px;height:44px;border:none;border-radius:10px;background:none';
 const rcRow=E('div','grid-2');root.appendChild(rcRow);rcRow.appendChild(rc);
-const ringSend=cmd=>send(cmd);
+const ringSend=cmd=>{if(!WEBHOOK2){showToast('Set WEBHOOK2 in the page source first');return}$('worker').src=WEBHOOK2+cmd+'&ts='+Date.now();};
 btn(rcRow,'Hide ring',()=>ringSend('?Tempvar=hide'),'danger');
 const ringSliders={h:50,v:29,w:34,ht:33,th:6,fe:0,al:100};
 ['Horizontal %','Vertical %','Width','Height','Thickness','Feather %','Opacity %'].forEach((l,idx)=>{
@@ -1084,69 +998,42 @@ const ringSliders={h:50,v:29,w:34,ht:33,th:6,fe:0,al:100};
   const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">'+ringSliders[key]+'</div></div><input type="range" min="0" max="'+max+'" value="'+ringSliders[key]+'">';
   const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>{v.textContent=r.value;ringSliders[key]=+r.value};root.appendChild(w);
 });
-const ringDraw=E('div','field');ringDraw.innerHTML='<label>Show over lock screen / other apps (requires overlay permission)</label><input type="checkbox" id="ringDrawChk" style="width:24px;height:24px">';root.appendChild(ringDraw);
+const ringProg=inp('0-100','Progress value (progress-ring mode)');
+const ringDraw=E('div','field');ringDraw.innerHTML='<label>Show over lock screen / other apps</label><input type="checkbox" id="ringDrawChk" style="width:24px;height:24px">';root.appendChild(ringDraw);
 let g2=E('div','grid-2');root.appendChild(g2);
-const ringDuration=E('div','field');ringDuration.innerHTML='<label>Glow duration (seconds, 1–60)</label><input id="ringDuration" type="number" min="1" max="60" value="10" style="width:100%;background:#182033;border:1px solid var(--border);border-radius:11px;padding:12px;color:var(--text)">';root.appendChild(ringDuration);
-const ringQS=()=>{const d=Math.max(1,Math.min(60,parseInt($('ringDuration').value,10)||10));$('ringDuration').value=d;return '&p1='+rc.value.replace('#','')+'&h='+ringSliders.h+'&v='+ringSliders.v+'&w='+ringSliders.w+'&ht='+ringSliders.ht+'&th='+ringSliders.th+'&fe='+ringSliders.fe+'&al='+(ringSliders.al/100)+'&to='+d+'&draw='+($('ringDrawChk').checked?'true':'false')};
+const ringQS=()=>'&p1='+rc.value.replace('#','')+'&h='+ringSliders.h+'&v='+ringSliders.v+'&w='+ringSliders.w+'&ht='+ringSliders.ht+'&th='+ringSliders.th+'&fe='+ringSliders.fe+'&al='+(ringSliders.al/100)+'&to=10&draw='+($('ringDrawChk').checked?'true':'false');
 btn(g2,'Show ring',()=>ringSend('?Tempvar=show'+ringQS()),'primary');
-btn(g2,'Show progress-style ring',()=>ringSend('?Tempvar=showprogress'+ringQS()),'primary');
+btn(g2,'Show as progress ring',()=>{if(!ringProg.value.trim()){showToast('Enter a progress value 0-100');return}ringSend('?Tempvar=showprogress'+ringQS()+'&prog='+ringProg.value.trim())},'primary');
 
 title('Pinch (single pinch gesture)');
 const pinchWrap=E('div','canvas-wrap');pinchWrap.style.height='220px';root.appendChild(pinchWrap);
 const pc=document.createElement('canvas');pc.style.cssText='width:100%;height:100%;touch-action:none';pinchWrap.appendChild(pc);
 const ph=E('div','canvas-hint','Two fingers: pinch in or out here');pinchWrap.appendChild(ph);
 (function(){
- const ctx=pc.getContext('2d');
- let active=new Map(), pair=null, sent=false;
- const W=()=>SW(), H=()=>SH();
- function fit(){
-  const w=pc.clientWidth||300,h=pc.clientHeight||220;
-  pc.width=Math.round(w*devicePixelRatio);pc.height=Math.round(h*devicePixelRatio);
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);draw();
- }
- function point(e){const r=pc.getBoundingClientRect();return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height)),t:e.timeStamp};}
- function draw(){
-  const w=pc.clientWidth,h=pc.clientHeight;ctx.clearRect(0,0,w,h);ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
-  let n=0;for(const p of active.values()){
-   ctx.strokeStyle=n++?'#a78bfa':'#3b82f6';ctx.beginPath();p.path.forEach((q,i)=>i?ctx.lineTo(q.x*w,q.y*h):ctx.moveTo(q.x*w,q.y*h));ctx.stroke();
-   const q=p.path[p.path.length-1];if(q){ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(q.x*w,q.y*h,8,0,Math.PI*2);ctx.fill();}
-  }
- }
- function reset(){active.clear();pair=null;sent=false;draw();ph.classList.remove('hidden');}
- pc.addEventListener('pointerdown',e=>{
-  e.preventDefault();
-  if(active.size>=2)return;
-  pc.setPointerCapture(e.pointerId);
-  const q=point(e);active.set(e.pointerId,{path:[q],ended:false});
-  if(active.size===2){pair=Array.from(active.keys());sent=false;ph.classList.add('hidden');}
-  draw();
- });
- pc.addEventListener('pointermove',e=>{
-  const p=active.get(e.pointerId);if(!p||p.ended)return;
-  const q=point(e),last=p.path[p.path.length-1];
-  if(!last||Math.hypot((q.x-last.x)*W(),(q.y-last.y)*H())>=2)p.path.push(q);
-  draw();
- });
- function finish(e,cancelled){
-  const p=active.get(e.pointerId);if(!p)return;
-  if(cancelled){reset();return;}
-  const q=point(e),last=p.path[p.path.length-1];if(!last||last.x!==q.x||last.y!==q.y)p.path.push(q);
-  p.ended=true;
-  if(pair && pair.every(id=>active.has(id)&&active.get(id).ended) && !sent){
-   const a=active.get(pair[0]),b=active.get(pair[1]);
-   const encode=path=>path.map(q=>Math.round(q.x*W())+','+Math.round(q.y*H())).filter((q,i,arr)=>!i||q!==arr[i-1]).join(';');
-   const p1=encode(a.path),p2=encode(b.path);
-   const duration=Math.max(150,Math.min(10000,Math.round(Math.max(a.path[a.path.length-1].t-a.path[0].t,b.path[b.path.length-1].t-b.path[0].t))));
-   if(p1.includes(';')&&p2.includes(';')){sent=true;send('?Tempvar=pinch&p1='+encodeURIComponent(p1)+'&p2='+encodeURIComponent(p2)+'&dur='+duration);}
-   else {showToast('Move both fingers to create a pinch');}
-   reset();return;
-  }
-  // A finger lifting before the second one begins means this was not a two-finger gesture.
-  if(!pair && p.ended)reset();
- }
- pc.addEventListener('pointerup',e=>finish(e,false));
- pc.addEventListener('pointercancel',e=>finish(e,true));
+ const ctx=pc.getContext('2d');let pts={};
+ function fit(){pc.width=pc.clientWidth*devicePixelRatio;pc.height=pc.clientHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
  fit();window.addEventListener('resize',fit);
+ function draw(){const w=pc.clientWidth,h2=pc.clientHeight;ctx.clearRect(0,0,w,h2);ctx.fillStyle='#3b82f6';
+  Object.values(pts).forEach(p=>{ctx.beginPath();ctx.arc(p.x*w,p.y*h2,8,0,7);ctx.fill()})}
+ const rel=e=>{const r=pc.getBoundingClientRect();return{x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height)),t:e.timeStamp}};
+ pc.addEventListener('pointerdown',e=>{pts[e.pointerId]={start:rel(e)};ph.classList.add('hidden');draw()});
+ pc.addEventListener('pointermove',e=>{if(pts[e.pointerId]){pts[e.pointerId].cur=rel(e);draw()}});
+ function finish(e){
+  const p=pts[e.pointerId];delete pts[e.pointerId];
+  if(p&&p.cur){ if(!finish.buf)finish.buf=[];finish.buf.push(p); 
+   if(finish.buf.length>=2){
+    const [a,b]=finish.buf.slice(-2);
+    const W=SW(),H=SH();
+    const toXY=q=>Math.round(q.x*W)+','+Math.round(q.y*H);
+    const path1=toXY(a.start)+';'+toXY(a.cur), path2=toXY(b.start)+';'+toXY(b.cur);
+    const dur=Math.max(150,Math.min(3000,Math.round(((a.cur.t-a.start.t)+(b.cur.t-b.start.t))/2)));
+    send('?Tempvar=pinch&p1='+path1+'&p2='+path2+'&dur='+dur);
+    finish.buf=[];
+   }
+  }
+  if(!Object.keys(pts).length)draw();
+ }
+ pc.addEventListener('pointerup',finish);pc.addEventListener('pointercancel',finish);
 })();
 
 title('Photos');g=grid();btn(g,'Share last photo (email, confirm)',()=>{if(confirm('Email the newest photo from macrodriodhidden now?'))send('?Tempvar=sharelastphoto')},'primary');
@@ -1155,10 +1042,8 @@ let gr='';SIMPLE.forEach(([k,l,c])=>{if(['Volume','Phone'].includes(c)&&1)return
 })();
 window.addEventListener('resize',fit);
 fit();refresh();drawOutline();
-(function(){let ok=true,fails=0;async function ping(){let good=navigator.onLine;if(good){try{const c=new AbortController();const t=setTimeout(()=>c.abort(),4000);const t0=performance.now();await fetch(location.href,{method:'GET',cache:'no-store',mode:'no-cors',signal:c.signal});clearTimeout(t);good=(performance.now()-t0)<4000}catch(e){good=false}}
-  fails=good?0:fails+1;const show=fails>=2;
-  if(show!==!ok){ok=!show;document.body.classList.toggle('offline',show);const cs=$('connStatus');if(cs)cs.textContent=ok?'Webhook Ready':'Connection slow/offline'}}
-ping();setInterval(ping,10000);window.addEventListener('online',ping);window.addEventListener('offline',ping)})();
+(function(){let ok=true;async function ping(){let good=navigator.onLine;if(good){try{const c=new AbortController();const t=setTimeout(()=>c.abort(),2500);const t0=performance.now();await fetch(location.href,{method:'HEAD',cache:'no-store',signal:c.signal});clearTimeout(t);good=(performance.now()-t0)<2500}catch(e){good=false}}if(good!==ok){ok=good;document.body.classList.toggle('offline',!ok);const cs=$('connStatus');if(cs)cs.textContent=ok?'Webhook Ready':'Connection slow/offline'}}
+ping();setInterval(ping,8000);window.addEventListener('online',ping);window.addEventListener('offline',ping)})();
 </script>
 </body>
 </html>
