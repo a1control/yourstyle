@@ -360,9 +360,31 @@ input[type="range"]::-webkit-slider-thumb {
 
 #gestureCanvas {
   width: 100%;
-  height: 420px;
+  height: 100%;
   display: block;
   cursor: crosshair;
+  touch-action: none;
+}
+.canvas-wrap {
+  width: min(100%, 340px) !important;
+  margin: 0 auto !important;
+  aspect-ratio: 1272 / 2800;
+  max-height: min(72vh, 620px);
+  border-radius: 36px !important;
+  border: 3px solid rgba(148,163,184,0.35) !important;
+  background: #05080f !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    0 12px 40px rgba(0,0,0,0.55),
+    0 0 0 8px rgba(15,23,42,0.9);
+  overflow: hidden;
+  position: relative;
+}
+.phone-bezel-label {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 6px 0 2px;
 }
 .canvas-wrap {
   border-radius: 28px !important;
@@ -507,10 +529,10 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 <div class="sticky-top">
   <div class="header">
     <h1>MacroDroid Controller</h1>
-    <div class="sub">Remote Device Control · Gesture v9</div>
+    <div class="sub">Remote Device Control · Gesture v10 P3</div>
     <div class="status">
       <div class="status-dot"></div>
-      <span id="connStatus">Webhook Ready · Gesture v9</span>
+      <span id="connStatus">Webhook Ready · Gesture v10 P3</span>
     </div>
   </div>
   <div class="cooldown-bar" id="cooldownBar">
@@ -585,8 +607,8 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 <div class="card">
   <div class="card-title">Gesture Studio · Edge-accurate</div>
   <div class="field-row">
-    <div class="field"><label>Screen width px</label><input type="number" id="scrW" value="1080"></div>
-    <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2374"></div>
+    <div class="field"><label>Screen width px</label><input type="number" id="scrW" value="1272"></div>
+    <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2800"></div>
   </div>
   <div class="field-row">
     <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="900"></div>
@@ -603,7 +625,7 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
   <div class="combo-status" id="comboStatus"><span class="step" id="comboStep"></span> on <span id="comboName"></span></div>
   <div class="canvas-wrap" id="canvasWrap">
     <canvas id="gestureCanvas"></canvas><canvas id="phoneOutline" style="position:absolute;inset:0;pointer-events:none"></canvas><div id="liveDot" style="position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.3);display:none;pointer-events:none"></div>
-    <div class="canvas-hint" id="canvasHint">Draw here · Pad edge = phone edge · Live mode for real-time</div>
+    <div class="canvas-hint" id="canvasHint">P3 Ultra pad · edge = phone edge · turn LIVE on & slide</div>
   </div>
   <div class="grid-3" style="margin-bottom:12px">
     <button class="btn" id="undoBtn">Undo stroke</button>
@@ -615,10 +637,10 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
       <input type="checkbox" id="liveMode" style="width:24px;height:24px">
     </div>
     <div class="field" style="margin:0"><label>Live gap ms</label>
-      <input type="number" id="liveGap" value="280" min="200" max="1200">
+      <input type="number" id="liveGap" value="150" min="200" max="1200">
     </div>
   </div>
-  <div id="liveStatus" style="font-size:.75rem;color:var(--green);margin-bottom:8px;display:none">LIVE — moves send while you slide</div>
+  <div id="liveStatus" style="font-size:.75rem;color:var(--green);margin-bottom:8px;display:none">LIVE — moves send while you slide <span id="liveCoord" style="color:#22c55e;font-size:0.75rem;margin-left:8px"></span></div>
   <div class="field"><label>Wait after this platform ms</label><input type="number" id="platWait" value="2000"></div>
   <div id="seqInfo" style="font-size:.75rem;color:var(--muted);margin-bottom:12px"></div>
   <div class="grid-2">
@@ -927,58 +949,55 @@ function steps(i){const out=[];
   return out}
 
 // Canvas keeps the same aspect ratio as the phone screen
-function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
-  const r=Math.min(w,h)*0.07;
-  // outer bezel
-  x.strokeStyle='rgba(100,116,139,0.7)';x.lineWidth=2.5;
-  x.beginPath();if(x.roundRect)x.roundRect(1.5,1.5,w-3,h-3,r);else x.rect(1.5,1.5,w-3,h-3);x.stroke();
-  // inner screen
-  x.strokeStyle='rgba(148,163,184,0.18)';x.lineWidth=1;
-  const inset=7;
-  x.beginPath();if(x.roundRect)x.roundRect(inset,inset,w-inset*2,h-inset*2,r*0.75);else x.rect(inset,inset,w-inset*2,h-inset*2);x.stroke();
-  // status bar zone (top)
-  x.fillStyle='rgba(148,163,184,0.08)';
-  x.fillRect(inset,inset,w-inset*2,Math.min(28,h*0.06));
-  // punch-hole / camera
-  x.fillStyle='rgba(148,163,184,0.55)';
-  x.beginPath();x.arc(w/2, inset+12, 4, 0, 7);x.fill();
-  x.fillStyle='rgba(30,41,59,0.9)';
-  x.beginPath();x.arc(w/2, inset+12, 2.2, 0, 7);x.fill();
-  // gesture nav bar (bottom)
-  const navH=Math.min(18,h*0.04);
-  x.fillStyle='rgba(148,163,184,0.12)';
-  x.fillRect(inset, h-inset-navH, w-inset*2, navH);
-  x.fillStyle='rgba(148,163,184,0.45)';
-  x.fillRect(w/2-22, h-inset-navH/2-1.5, 44, 3);
-  // edge highlight zones (left/right/top/bottom) so user sees true edges
-  x.strokeStyle='rgba(59,130,246,0.35)';x.lineWidth=2;
+function drawOutline(){const oc=$('phoneOutline');if(!oc)return;const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;oc.width=w*dpr;oc.height=h*dpr;oc.style.width=w+'px';oc.style.height=h+'px';const x=oc.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+  const r=Math.min(w,h)*0.09;
+  // outer phone body
+  x.strokeStyle='rgba(148,163,184,0.55)';x.lineWidth=2.5;
+  x.beginPath();if(x.roundRect)x.roundRect(2,2,w-4,h-4,r);else x.rect(2,2,w-4,h-4);x.stroke();
+  // status bar
+  const top=Math.min(26,h*0.045);
+  x.fillStyle='rgba(148,163,184,0.07)';
+  x.fillRect(8,8,w-16,top);
+  // punch hole centered
+  x.fillStyle='rgba(148,163,184,0.5)';
+  x.beginPath();x.arc(w/2, 8+top/2, 3.5, 0, 7);x.fill();
+  // bottom gesture bar
+  const nav=Math.min(16,h*0.035);
+  x.fillStyle='rgba(148,163,184,0.1)';
+  x.fillRect(8,h-8-nav,w-16,nav);
+  x.fillStyle='rgba(148,163,184,0.4)';
+  x.fillRect(w/2-20, h-8-nav/2-1.5, 40, 3);
+  // EDGE guides — thick so user sees exact control zones
+  x.lineWidth=3;
+  x.strokeStyle='rgba(59,130,246,0.55)'; // left/right blue
+  x.beginPath();x.moveTo(6, top+12);x.lineTo(6, h-nav-12);x.stroke();
+  x.beginPath();x.moveTo(w-6, top+12);x.lineTo(w-6, h-nav-12);x.stroke();
+  x.strokeStyle='rgba(34,197,94,0.5)'; // top/bottom green
+  x.beginPath();x.moveTo(18, 6);x.lineTo(w-18, 6);x.stroke();
+  x.beginPath();x.moveTo(18, h-6);x.lineTo(w-18, h-6);x.stroke();
+  // soft crosshair
+  x.strokeStyle='rgba(59,130,246,0.12)';x.lineWidth=1;x.setLineDash([4,10]);
+  x.beginPath();x.moveTo(w/2, top+8);x.lineTo(w/2, h-nav-6);
+  x.moveTo(10, h/2);x.lineTo(w-10, h/2);x.stroke();
   x.setLineDash([]);
-  // left edge
-  x.beginPath();x.moveTo(inset+1, inset+30);x.lineTo(inset+1, h-inset-30);x.stroke();
-  // right edge
-  x.beginPath();x.moveTo(w-inset-1, inset+30);x.lineTo(w-inset-1, h-inset-30);x.stroke();
-  // top edge line
-  x.strokeStyle='rgba(34,197,94,0.3)';
-  x.beginPath();x.moveTo(inset+20, inset+1);x.lineTo(w-inset-20, inset+1);x.stroke();
-  // bottom edge line
-  x.beginPath();x.moveTo(inset+20, h-inset-1);x.lineTo(w-inset-20, h-inset-1);x.stroke();
-  // soft quadrant guides
-  x.strokeStyle='rgba(59,130,246,0.08)';x.lineWidth=1;x.setLineDash([3,8]);
-  x.beginPath();x.moveTo(w/2, inset+28);x.lineTo(w/2, h-inset-navH-4);
-  x.moveTo(inset+4, h/2);x.lineTo(w-inset-4, h/2);x.stroke();
-  x.setLineDash([]);
-  // corner labels for orientation
-  x.fillStyle='rgba(148,163,184,0.4)';x.font='bold 9px sans-serif';
-  x.fillText('TL', inset+6, inset+40);
-  x.fillText('TR', w-inset-20, inset+40);
-  x.fillText('BL', inset+6, h-inset-navH-8);
-  x.fillText('BR', w-inset-22, h-inset-navH-8);
+  // corner labels
+  x.fillStyle='rgba(148,163,184,0.45)';x.font='bold 10px sans-serif';
+  x.fillText('TL', 10, top+22);
+  x.fillText('TR', w-24, top+22);
+  x.fillText('BL', 10, h-nav-10);
+  x.fillText('BR', w-24, h-nav-10);
 }
-function fit(){const W=SW(),H=SH(),w0=$('canvasWrap').clientWidth||300;
-  // Keep phone aspect ratio, allow taller pad for easier drawing
-  let w=w0, h=Math.min(w0*H/W, Math.max(380, innerHeight*0.62));
-  cv.style.width=w+'px';cv.style.height=h+'px';cv.style.margin='0 auto';cv.style.touchAction='none';
-  cv.width=w*dpr;cv.height=h*dpr;draw()}
+function fit(){
+  const wrap=$('canvasWrap');
+  if(!wrap)return;
+  // CSS aspect-ratio handles phone shape; size canvas to wrap
+  const w=wrap.clientWidth||280;
+  const h=wrap.clientHeight||Math.round(w*2800/1272);
+  cv.style.width=w+'px';cv.style.height=h+'px';
+  cv.style.touchAction='none';
+  cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  draw();
+}
 function draw(){drawOutline();const w=cv.clientWidth,h=cv.clientHeight;
   cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,w,h);
   cx.lineWidth=3;cx.lineCap=cx.lineJoin='round';
@@ -1005,38 +1024,66 @@ const pt=e=>{const r=cv.getBoundingClientRect();
   return{t:e.timeStamp,x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}};
 let liveLastSend=0, liveLastXY=null;
 function edgeSnap(px, py){
-  const W=SW(),H=SH(),mg=Math.max(0,num('edgeM',0)),snap=22;
+  const W=SW(),H=SH(),mg=Math.max(0,num('edgeM',0)),snap=28;
   let x=Math.round(px*W), y=Math.round(py*H);
+  // hard snap near edges so pad edge == phone edge
   if(x<=mg+snap) x=mg; else if(x>=W-mg-snap) x=W-1-mg;
   if(y<=mg+snap) y=mg; else if(y>=H-mg-snap) y=H-1-mg;
   return {x:Math.min(W-1-mg,Math.max(mg,x)), y:Math.min(H-1-mg,Math.max(mg,y))};
 }
+// LIVE: fire-and-forget Image beacon (no lock, no iframe queue)
+function liveFire(qs){
+  try{
+    const img=new Image();
+    img.src=WEBHOOK+(qs.indexOf('?')===0?qs:'?'+qs)+'&ts='+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  }catch(e){}
+}
 function liveSendTap(nx,ny){
-  if(locked||comboRunning)return;
+  // live never blocked by lockUI
   const {x,y}=edgeSnap(nx,ny);
-  $('worker').src=WEBHOOK+'?X='+x+'&Y='+y+'&ts='+Date.now();
+  liveFire('X='+x+'&Y='+y);
   liveLastXY={x,y};
+  const coord=$('liveCoord');if(coord)coord.textContent=x+','+y;
 }
 function liveSendSwipe(a,b){
-  if(locked||comboRunning)return;
   const s=edgeSnap(a.x,a.y), e=edgeSnap(b.x,b.y);
   if(s.x===e.x&&s.y===e.y){liveSendTap(b.x,b.y);return}
-  $('worker').src=WEBHOOK+'?SX='+s.x+'&SY='+s.y+'&EX='+e.x+'&EY='+e.y+'&ts='+Date.now();
+  liveFire('SX='+s.x+'&SY='+s.y+'&EX='+e.x+'&EY='+e.y);
   liveLastXY={x:e.x,y:e.y};
+  const coord=$('liveCoord');if(coord)coord.textContent=s.x+','+s.y+' → '+e.x+','+e.y;
 }
-cv.onpointerdown=e=>{if(comboRunning)return;e.preventDefault();cv.setPointerCapture(e.pointerId);drawing=[pt(e)];draw();
-  const live=$('liveMode')&&$('liveMode').checked;const ls=$('liveStatus');if(ls)ls.style.display=live?'block':'none';
+cv.onpointerdown=e=>{
+  if(comboRunning)return;
+  e.preventDefault();
+  try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  drawing=[pt(e)];draw();
+  const live=$('liveMode')&&$('liveMode').checked;
+  const ls=$('liveStatus');if(ls)ls.style.display=live?'block':'none';
   if(live){liveLastSend=performance.now();liveSendTap(drawing[0].x,drawing[0].y)}
 };
-cv.onpointermove=e=>{const p=pt(e);lastPt=p;const dot=$('liveDot');if(dot){dot.style.left=(p.x*100)+'%';dot.style.top=(p.y*100)+'%';dot.style.display='block'}
-  if(drawing){drawing.push(p);draw();
+cv.onpointermove=e=>{
+  const p=pt(e);lastPt=p;
+  const dot=$('liveDot');
+  if(dot){dot.style.left=(p.x*100)+'%';dot.style.top=(p.y*100)+'%';dot.style.display='block'}
+  if(drawing){
+    drawing.push(p);draw();
     const live=$('liveMode')&&$('liveMode').checked;
-    if(live){const gap=Math.max(200,num('liveGap',350));const now=performance.now();
-      if(now-liveLastSend>=gap){const prev=drawing[Math.max(0,drawing.length-6)];liveSendSwipe(prev,p);liveLastSend=now}}
+    if(live){
+      const gap=Math.max(80,num('liveGap',150));
+      const now=performance.now();
+      if(now-liveLastSend>=gap){
+        // use last 2-3 points for short continuous swipes
+        const prev=drawing[Math.max(0,drawing.length-3)];
+        liveSendSwipe(prev,p);
+        liveLastSend=now;
+      }
+    }
   }
 };
-cv.onpointerup=cv.onpointercancel=()=>{if(drawing){P[cur].s.push(drawing);drawing=null;refresh()}
-  const ls=$('liveStatus');if(ls&&!($('liveMode')&&$('liveMode').checked))ls.style.display='none'};
+cv.onpointerup=cv.onpointercancel=()=>{
+  if(drawing){P[cur].s.push(drawing);drawing=null;refresh()}
+};
+
 
 $('undoBtn').onclick=()=>{P[cur].s.pop();refresh()};
 $('clearBtn').onclick=()=>{P[cur].s=[];refresh()};
@@ -1162,7 +1209,7 @@ let gr='';SIMPLE.forEach(([k,l,c])=>{if(['Volume','Phone'].includes(c)&&1)return
 })();
 window.addEventListener('resize',fit);
 fit();refresh();drawOutline();
-(function(){let ok=true;async function ping(){let good=navigator.onLine;if(good){try{const c=new AbortController();const t=setTimeout(()=>c.abort(),2500);const t0=performance.now();await fetch(location.href,{method:'HEAD',cache:'no-store',signal:c.signal});clearTimeout(t);good=(performance.now()-t0)<2500}catch(e){good=false}}if(good!==ok){ok=good;document.body.classList.toggle('offline',!ok);const cs=$('connStatus');if(cs)cs.textContent=ok?'Webhook Ready · Gesture v9':'Connection slow/offline'}}
+(function(){let ok=true;async function ping(){let good=navigator.onLine;if(good){try{const c=new AbortController();const t=setTimeout(()=>c.abort(),2500);const t0=performance.now();await fetch(location.href,{method:'HEAD',cache:'no-store',signal:c.signal});clearTimeout(t);good=(performance.now()-t0)<2500}catch(e){good=false}}if(good!==ok){ok=good;document.body.classList.toggle('offline',!ok);const cs=$('connStatus');if(cs)cs.textContent=ok?'Webhook Ready · Gesture v10 P3':'Connection slow/offline'}}
 ping();setInterval(ping,8000);window.addEventListener('online',ping);window.addEventListener('offline',ping)})();
 </script>
 </body>
