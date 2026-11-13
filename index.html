@@ -973,6 +973,7 @@ let g=grid();btn(g,'Previous',()=>send('?Tempvar=mediakey&mk=88'));btn(g,'Next',
 g=grid();btn(g,'« 10s',()=>send('?Tempvar=seekbwd'));btn(g,'10s »',()=>send('?Tempvar=seekfwd'));
 title('Play audio by name');const au=inp('song name','Audio file name');g=E('div','grid-2');root.appendChild(g);btn(g,'Play',()=>{if(au.value.trim())send('?Tempvar=playaudio&p1='+enc(au.value.trim()))},'primary');btn(g,'Stop',()=>send('?Tempvar=stopaudio'),'danger');
 title('Volume');[['Media','setvol_media','vol'],['Ring','setvol_ring','rvol'],['Alarm','setvol_alarm','avol']].forEach(([l,k,vn])=>{const w=E('div','slider-wrap');w.innerHTML='<div class="slider-header"><label>'+l+'</label><div class="slider-value">50</div></div><input type="range" min="0" max="100" value="50">';const r=w.querySelector('input'),v=w.querySelector('.slider-value');r.oninput=()=>v.textContent=r.value;r.onchange=()=>send('?Tempvar='+k+'&'+vn+'='+r.value);root.appendChild(w)});
+g=grid();btn(g,'Mute all',()=>send('?Tempvar=muteall'),'danger');btn(g,'Unmute (50%)',()=>send('?Tempvar=unmuteall'),'primary');
 g=grid();btn(g,'Volume +',()=>send('?Tempvar=volup'));btn(g,'Volume -',()=>send('?Tempvar=voldown'));
 title('WhatsApp');const wf=E('div','field');wf.innerHTML='<label>Account</label><select id="wacc" style="width:100%;background:#182033;color:#f1f5f9;border:1px solid var(--border);border-radius:11px;padding:12px"><option value="wa">WhatsApp</option><option value="wab">WhatsApp Business</option></select>';root.appendChild(wf);const wn=inp('919876543210 (country code, no +)','Number'),wm=inp('Message','Message');g=E('div','grid-2');root.appendChild(g);
 btn(g,'Open chat',()=>send('?Tempvar='+$('wacc').value+'_open&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)));btn(g,'Send now',()=>send('?Tempvar='+$('wacc').value+'_send&p1='+enc(wn.value.replace(/\D/g,''))+'&p2='+enc(wm.value)),'primary');
@@ -990,7 +991,7 @@ title('Record');g=grid();[15,30,60,120,300].forEach(n=>btn(g,'Mic '+n+'s',()=>se
 title('Camera ring overlay');
 const rc=document.createElement('input');rc.type='color';rc.value='#ff2d55';rc.style.cssText='width:56px;height:44px;border:none;border-radius:10px;background:none';
 const rcRow=E('div','grid-2');root.appendChild(rcRow);rcRow.appendChild(rc);
-const ringSend=cmd=>{if(!WEBHOOK2){showToast('Set WEBHOOK2 in the page source first');return}$('worker').src=WEBHOOK2+cmd+'&ts='+Date.now();};
+const ringSend=cmd=>{if(!WEBHOOK2){showToast('Set WEBHOOK2 in the page source first');return}if(locked||comboRunning){showToast('Please wait...');return}$('worker').src=WEBHOOK2+cmd+'&ts='+Date.now();showToast('Action sent');lockUI(1100);};
 btn(rcRow,'Hide ring',()=>ringSend('?Tempvar=hide'),'danger');
 const ringSliders={h:50,v:29,w:34,ht:33,th:6,fe:0,al:100};
 ['Horizontal %','Vertical %','Width','Height','Thickness','Feather %','Opacity %'].forEach((l,idx)=>{
