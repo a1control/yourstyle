@@ -575,8 +575,8 @@ body.offline{filter:grayscale(1) brightness(.75);transition:filter .4s}
 <div class="card">
   <div class="card-title">Multi-Platform Gesture Studio</div>
   <div class="field-row">
-    <div class="field"><label>Screen width px</label><input type="number" id="scrW" value="1272"></div>
-    <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2800"></div>
+    <div class="field"><label>Screen width px</label><input type="number" id="scrW" value="1080"></div>
+    <div class="field"><label>Screen height px</label><input type="number" id="scrH" value="2400"></div>
   </div>
   <div class="field-row">
     <div class="field"><label>Gap per move ms</label><input type="number" id="gapMs" value="650"></div>
@@ -1091,63 +1091,6 @@ const ringQS=()=>{const d=Math.max(1,Math.min(60,parseInt($('ringDuration').valu
 btn(g2,'Show ring',()=>ringSend('?Tempvar=show'+ringQS()),'primary');
 btn(g2,'Show progress-style ring',()=>ringSend('?Tempvar=showprogress'+ringQS()),'primary');
 
-title('Pinch (single pinch gesture)');
-const pinchWrap=E('div','canvas-wrap');pinchWrap.style.height='220px';root.appendChild(pinchWrap);
-const pc=document.createElement('canvas');pc.style.cssText='width:100%;height:100%;touch-action:none';pinchWrap.appendChild(pc);
-const ph=E('div','canvas-hint','Two fingers: pinch in or out here');pinchWrap.appendChild(ph);
-(function(){
- const ctx=pc.getContext('2d');
- let active=new Map(), pair=null, sent=false;
- const W=()=>SW(), H=()=>SH();
- function fit(){
-  const w=pc.clientWidth||300,h=pc.clientHeight||220;
-  pc.width=Math.round(w*devicePixelRatio);pc.height=Math.round(h*devicePixelRatio);
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);draw();
- }
- function point(e){const r=pc.getBoundingClientRect();return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height)),t:e.timeStamp};}
- function draw(){
-  const w=pc.clientWidth,h=pc.clientHeight;ctx.clearRect(0,0,w,h);ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
-  let n=0;for(const p of active.values()){
-   ctx.strokeStyle=n++?'#a78bfa':'#3b82f6';ctx.beginPath();p.path.forEach((q,i)=>i?ctx.lineTo(q.x*w,q.y*h):ctx.moveTo(q.x*w,q.y*h));ctx.stroke();
-   const q=p.path[p.path.length-1];if(q){ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(q.x*w,q.y*h,8,0,Math.PI*2);ctx.fill();}
-  }
- }
- function reset(){active.clear();pair=null;sent=false;draw();ph.classList.remove('hidden');}
- pc.addEventListener('pointerdown',e=>{
-  e.preventDefault();
-  if(active.size>=2)return;
-  pc.setPointerCapture(e.pointerId);
-  const q=point(e);active.set(e.pointerId,{path:[q],ended:false});
-  if(active.size===2){pair=Array.from(active.keys());sent=false;ph.classList.add('hidden');}
-  draw();
- });
- pc.addEventListener('pointermove',e=>{
-  const p=active.get(e.pointerId);if(!p||p.ended)return;
-  const q=point(e),last=p.path[p.path.length-1];
-  if(!last||Math.hypot((q.x-last.x)*W(),(q.y-last.y)*H())>=2)p.path.push(q);
-  draw();
- });
- function finish(e,cancelled){
-  const p=active.get(e.pointerId);if(!p)return;
-  if(cancelled){reset();return;}
-  const q=point(e),last=p.path[p.path.length-1];if(!last||last.x!==q.x||last.y!==q.y)p.path.push(q);
-  p.ended=true;
-  if(pair && pair.every(id=>active.has(id)&&active.get(id).ended) && !sent){
-   const a=active.get(pair[0]),b=active.get(pair[1]);
-   const encode=path=>path.map(q=>Math.round(q.x*W())+','+Math.round(q.y*H())).filter((q,i,arr)=>!i||q!==arr[i-1]).join(';');
-   const p1=encode(a.path),p2=encode(b.path);
-   const duration=Math.max(150,Math.min(10000,Math.round(Math.max(a.path[a.path.length-1].t-a.path[0].t,b.path[b.path.length-1].t-b.path[0].t))));
-   if(p1.includes(';')&&p2.includes(';')){sent=true;send('?Tempvar=pinch&p1='+encodeURIComponent(p1)+'&p2='+encodeURIComponent(p2)+'&dur='+duration);}
-   else {showToast('Move both fingers to create a pinch');}
-   reset();return;
-  }
-  // A finger lifting before the second one begins means this was not a two-finger gesture.
-  if(!pair && p.ended)reset();
- }
- pc.addEventListener('pointerup',e=>finish(e,false));
- pc.addEventListener('pointercancel',e=>finish(e,true));
- fit();window.addEventListener('resize',fit);
-})();
 
 title('Photos');g=grid();btn(g,'Share last photo (email, confirm)',()=>{if(confirm('Email the newest photo from macrodriodhidden now?'))send('?Tempvar=sharelastphoto')},'primary');
 
